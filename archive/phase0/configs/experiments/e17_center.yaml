@@ -1,0 +1,20 @@
+name: e17_center
+description: "E17 (D47) kiểm soát (b): phóng to theo hộp trung tâm cố định (cỡ trung vị của hộp phổi) không dùng mặt nạ từng ảnh. r = (X - 0,809) / 0,083 so với A0 ảnh gốc 0,809 và A0 crop 0,892; r >= 0,7: phóng to/khung hình là nguyên nhân chính (và không cần mặt nạ phổi cho đích nhi); r <= 0,3: không phải. Cần: prep_covid19_radiography.py --task opacity --frame center."
+defaults:
+  arm: a0
+  profile: moderate
+  views: [ap]
+  select: source_val
+  out-dir: outputs/e10_opacity_center
+  vindr-dir: data/processed/cxr_adult_opacity_center
+seeds: [0, 1, 2]
+variants:
+  - {name: a0_f0, args: {val-fold: 0}}
+  - {name: a0_f1, args: {val-fold: 1}}
+  - {name: a0_f2, args: {val-fold: 2}}
+  - {name: a0_f3, args: {val-fold: 3}}
+diagnostics: [confounds]
+diagnostic_args:
+  confounds: {out-root: outputs/e10_opacity_center, vindr-dir: data/processed/cxr_adult_opacity_center}
+summary: true
+summary_args: {dir: outputs/e10_opacity_center}

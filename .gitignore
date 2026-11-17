@@ -1,0 +1,20 @@
+# Dữ liệu và kết quả: KHÔNG commit (giấy phép, dung lượng)
+data/
+outputs/
+cache/
+*.nii
+*.nii.gz
+*.dcm
+*.npz
+*.pt
+*.pth
+*.zip
+# Môi trường
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+# Cấu hình cục bộ / khoá truy cập
+.env
+*.token

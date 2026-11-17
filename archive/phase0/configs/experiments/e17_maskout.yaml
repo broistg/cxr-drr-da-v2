@@ -1,0 +1,20 @@
+name: e17_maskout
+description: "E17 (D47) kiểm soát (a): ảnh đích giữ nguyên tỷ lệ nhưng xóa vùng ngoài hộp phổi (cùng cường độ với ảnh cắt). So với A0 ảnh gốc (0,809 trung bình 4 fold) và A0 crop (0,892): phần phục hồi r = (X - 0,809) / 0,083; r >= 0,7: nội dung ngoài phổi là nguyên nhân chính; r <= 0,3: không phải. Cần: prep_covid19_radiography.py --task opacity --frame maskout."
+defaults:
+  arm: a0
+  profile: moderate
+  views: [ap]
+  select: source_val
+  out-dir: outputs/e10_opacity_maskout
+  vindr-dir: data/processed/cxr_adult_opacity_maskout
+seeds: [0, 1, 2]
+variants:
+  - {name: a0_f0, args: {val-fold: 0}}
+  - {name: a0_f1, args: {val-fold: 1}}
+  - {name: a0_f2, args: {val-fold: 2}}
+  - {name: a0_f3, args: {val-fold: 3}}
+diagnostics: [confounds]
+diagnostic_args:
+  confounds: {out-root: outputs/e10_opacity_maskout, vindr-dir: data/processed/cxr_adult_opacity_maskout}
+summary: true
+summary_args: {dir: outputs/e10_opacity_maskout}

@@ -1,0 +1,7 @@
+name: e14_seg
+description: "E14: A0 + segmentation head (docs/experiment_ideas.md, D35/D36). Compare with the A0 runs of baseline_a0."
+defaults: {arm: a0, profile: moderate, views: [ap], val-fold: 0}
+seeds: [0, 1, 2]
+variants:
+  - {name: a0_seg1, args: {seg-weight: 1}}
+diagnostics: [confounds, gradcam, occlusion]

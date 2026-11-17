@@ -1,0 +1,19 @@
+name: e10a_opacity_selsrc
+description: "E10a lặp lại với chọn checkpoint KHÔNG dùng nhãn đích (--select source_val), để kiểm tra A0 0,85 có sống sót khi bỏ thiên lệch chọn trên target_val (D39). Kết quả vào cùng outputs/e10_opacity (tên run có hậu tố _selsrc)."
+defaults:
+  profile: moderate
+  views: [ap]
+  val-fold: 0
+  select: source_val
+  out-dir: outputs/e10_opacity
+  vindr-dir: data/processed/cxr_adult_opacity
+seeds: [0, 1, 2]
+variants:
+  - {name: a0_selsrc, args: {arm: a0}}
+  - {name: a1_g0_selsrc, args: {arm: a1, gamma: 0}}
+  - {name: a1_g1_selsrc, args: {arm: a1, gamma: 1}}
+diagnostics: [confounds]
+diagnostic_args:
+  confounds: {out-root: outputs/e10_opacity, vindr-dir: data/processed/cxr_adult_opacity}
+summary: true
+summary_args: {dir: outputs/e10_opacity}

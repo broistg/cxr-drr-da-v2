@@ -1,0 +1,27 @@
+name: e18d_adult_methods
+description: "E18d (D52, ưu tiên thấp): đưa khớp histogram, AdaBN, LMMD (gamma=1 và 0) trên đích NGƯỜI LỚN lên đủ 4 fold (hiện chỉ fold 0), source_val, để bảng thích nghi miền cùng giao thức hai đích. Fold 1-3 x 3 seed x 4 phương pháp = 36 run. Cần dữ liệu cxr_adult_opacity."
+defaults:
+  profile: moderate
+  views: [ap]
+  select: source_val
+  out-dir: outputs/e10_opacity
+  vindr-dir: data/processed/cxr_adult_opacity
+seeds: [0, 1, 2]
+variants:
+  - {name: hist_f1, args: {arm: a0, val-fold: 1, pixel-adapt: hist}}
+  - {name: hist_f2, args: {arm: a0, val-fold: 2, pixel-adapt: hist}}
+  - {name: hist_f3, args: {arm: a0, val-fold: 3, pixel-adapt: hist}}
+  - {name: adabn_f1, args: {arm: a0, val-fold: 1, adabn: true}}
+  - {name: adabn_f2, args: {arm: a0, val-fold: 2, adabn: true}}
+  - {name: adabn_f3, args: {arm: a0, val-fold: 3, adabn: true}}
+  - {name: g1_f1, args: {arm: a1, val-fold: 1, gamma: 1, warmup-epochs: 10}}
+  - {name: g1_f2, args: {arm: a1, val-fold: 2, gamma: 1, warmup-epochs: 10}}
+  - {name: g1_f3, args: {arm: a1, val-fold: 3, gamma: 1, warmup-epochs: 10}}
+  - {name: g0_f1, args: {arm: a1, val-fold: 1, gamma: 0, warmup-epochs: 10}}
+  - {name: g0_f2, args: {arm: a1, val-fold: 2, gamma: 0, warmup-epochs: 10}}
+  - {name: g0_f3, args: {arm: a1, val-fold: 3, gamma: 0, warmup-epochs: 10}}
+diagnostics: [confounds]
+diagnostic_args:
+  confounds: {out-root: outputs/e10_opacity, vindr-dir: data/processed/cxr_adult_opacity}
+summary: true
+summary_args: {dir: outputs/e10_opacity}

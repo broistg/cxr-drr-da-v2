@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "drr-pipeline"
+version = "0.1.0"
+description = "CT -> DRR with infection-aware weighting (after DRR4Covid) for chest X-ray disease detection"
+requires-python = ">=3.10"
+# torch is installed by hand first (CUDA build must match the machine), so it is not listed here.
+dependencies = ["numpy", "nibabel", "pyyaml", "scipy", "matplotlib", "pillow"]
+
+[project.optional-dependencies]
+render = ["diffdrr"]
+dev = ["pytest"]
+cxr = ["pydicom"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

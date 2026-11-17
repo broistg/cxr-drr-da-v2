@@ -1,0 +1,20 @@
+name: e17c_null_maskout_fixed
+description: "E17c (D51): thêm null xáo nhãn cho maskout_fixed ở fold 1-3 (E17b mới có fold 0, 3 run, null 0,613 ± 0,086 > ngưỡng 0,58). Mục đích: có đủ 4 fold x 3 seed để so ghép cặp 'thật - null' giữa ảnh gốc, center, maskout và maskout_fixed. Cần dữ liệu maskout_fixed đã chuẩn bị."
+defaults:
+  arm: a0
+  profile: moderate
+  views: [ap]
+  select: source_val
+  shuffle-labels: true
+  out-dir: outputs/e10_opacity_maskout_fixed
+  vindr-dir: data/processed/cxr_adult_opacity_maskout_fixed
+seeds: [0, 1, 2]
+variants:
+  - {name: a0_null_f1, args: {val-fold: 1}}
+  - {name: a0_null_f2, args: {val-fold: 2}}
+  - {name: a0_null_f3, args: {val-fold: 3}}
+diagnostics: [confounds]
+diagnostic_args:
+  confounds: {out-root: outputs/e10_opacity_maskout_fixed, vindr-dir: data/processed/cxr_adult_opacity_maskout_fixed}
+summary: true
+summary_args: {dir: outputs/e10_opacity_maskout_fixed}

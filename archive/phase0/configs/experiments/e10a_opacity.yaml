@@ -1,0 +1,21 @@
+name: e10a_opacity
+description: "E10a (main): adult target from the COVID-19 Radiography Database, positive = Lung_Opacity vs negative = Normal, both from RSNA (same source). D38. Prepare first: python scripts/prep_covid19_radiography.py --task opacity"
+defaults:
+  profile: moderate
+  views: [ap]
+  val-fold: 0
+  out-dir: outputs/e10_opacity
+  vindr-dir: data/processed/cxr_adult_opacity       # train_cls.py reads manifest.csv + PNGs here (same layout as VinDr-PCXR)
+seeds: [0, 1, 2]
+variants:
+  - {name: a0, args: {arm: a0}}
+  - {name: a0_shuffled, args: {arm: a0, shuffle-labels: true}}
+  - {name: a1_g0, args: {arm: a1, gamma: 0}}
+  - {name: a1_g1, args: {arm: a1, gamma: 1}}
+  - {name: a2_supervised, args: {arm: a2}, seeds: [0]}
+# gradcam / occlusion need lesion boxes, which this database does not have -> only the confound/image-statistics check
+diagnostics: [confounds]
+diagnostic_args:
+  confounds: {out-root: outputs/e10_opacity, vindr-dir: data/processed/cxr_adult_opacity}
+summary: true
+summary_args: {dir: outputs/e10_opacity}

@@ -1,0 +1,19 @@
+name: e12_confirm_crop
+description: "Lặp crop phổi ở fold CT 1-3 (D41). So với a0_fold{1,2,3} không cắt (0,774 / 0,812 / 0,827) và đường cơ sở yếu tố tính lại trên ảnh cắt (0,776 ở fold 0). Đọc: crop có tác dụng nếu trung bình hơn A0 không cắt cùng fold từ 0,03 ở ít nhất 2/3 fold. Cần: prep_covid19_radiography.py --task opacity --crop-lungs."
+defaults:
+  arm: a0
+  profile: moderate
+  views: [ap]
+  select: source_val
+  out-dir: outputs/e10_opacity_crop
+  vindr-dir: data/processed/cxr_adult_opacity_crop
+seeds: [0, 1, 2]
+variants:
+  - {name: a0_crop_fold1, args: {val-fold: 1}}
+  - {name: a0_crop_fold2, args: {val-fold: 2}}
+  - {name: a0_crop_fold3, args: {val-fold: 3}}
+diagnostics: [confounds]
+diagnostic_args:
+  confounds: {out-root: outputs/e10_opacity_crop, vindr-dir: data/processed/cxr_adult_opacity_crop}
+summary: true
+summary_args: {dir: outputs/e10_opacity_crop}

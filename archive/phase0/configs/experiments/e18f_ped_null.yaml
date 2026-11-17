@@ -1,0 +1,18 @@
+name: e18f_ped_null
+description: "E18f (D52): null xáo nhãn trên đích NHI (VinDr-PCXR), A0, source_val, 4 fold CT x 3 seed = 12 run. Mục đích: B1 cho trẻ em cùng cách chọn (source_val) và cùng số run với M1 (exp1_ped_selsrc, 0,624); bản cũ 0,524 là target_val, fold 0, 3 run. Đọc: M1 chỉ đáng tin nếu cao hơn B1 cùng fold."
+defaults:
+  arm: a0
+  profile: moderate
+  views: [ap]
+  select: source_val
+  shuffle-labels: true
+  out-dir: outputs/exp1
+seeds: [0, 1, 2]
+variants:
+  - {name: a0_null_selsrc_f0, args: {val-fold: 0}}
+  - {name: a0_null_selsrc_f1, args: {val-fold: 1}}
+  - {name: a0_null_selsrc_f2, args: {val-fold: 2}}
+  - {name: a0_null_selsrc_f3, args: {val-fold: 3}}
+diagnostics: [confounds]
+summary: true
+summary_args: {dir: outputs/exp1}

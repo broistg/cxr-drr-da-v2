@@ -1,0 +1,34 @@
+# Dataset definitions. Versioned in git: layout and label conventions are part of the experiment.
+# Machine-specific location: set the environment variable DRR_DATA_ROOT to override `data_root`
+# (PowerShell:  $env:DRR_DATA_ROOT = "D:\datasets"   |  permanent: setx DRR_DATA_ROOT "D:\datasets").
+# Secrets (e.g. a Hugging Face token for ReXGroundingCT) do NOT go here: use a gitignored .env.
+data_root: data/raw          # relative paths are resolved from the repo root
+
+datasets: {}
+# Nguồn CT (DRR). Điền khi có dữ liệu thật; lược đồ giữ nguyên để generate_drr/inspect_dataset/render_case dùng được:
+#   <tên>:
+#     root: <thư mục dưới data_root>
+#     ct_dir: ...                  # CT (HU)
+#     mask_mode: separate | combined
+#     lung_dir / infection_dir     # nếu separate (infection = mặt nạ tổn thương của dấu hiệu s)
+#     combined_dir, infection_ids, lung_ids (tuỳ chọn, có thể bỏ trống), extra_ids: [[id tim], [id khí ngoài phổi]]   # nếu combined
+#     usable_cases_file: configs/usable_<tên>.txt   # tuỳ chọn (inspect_dataset.py --write-usable)
+# Nguồn dự kiến: CT-RATE (CT) + ReXGroundingCT (mặt nạ tổn thương) + mặt nạ phổi (TotalSegmentator/RadGenome): xem docs/DATA_ACCESS.md.
+# Cấu hình Giai đoạn 0 (COVID-19-CT-Seg): archive/phase0/configs/data_phase0.yaml.
+
+processed_dir: data/processed
+
+# Real chest X-ray datasets (target domain). Separate from `datasets` (CT sources).
+cxr_datasets:
+  vindr_pcxr:                   # PhysioNet restricted-access licence: never commit or share the files
+    root: vindr-pcxr            # under data_root
+    train_dir: train            # DICOM
+    test_dir: test
+    image_labels: {train: image_labels_train.csv, test: image_labels_test.csv}
+    annotations: {train: annotations_train.csv, test: annotations_test.csv}
+    # ASSUMPTION pending clinician confirmation (D18): image-level groups used to define "positive".
+    # airspace group ~ the kind of finding COVID infection weighting models (ground glass / consolidation);
+    # airway group (bronchitis, bronchiolitis) is peribronchial / interstitial and is NOT modelled by it.
+    groups:
+      pneumonia_group: [Pneumonia, Brocho-pneumonia, Pleuro-pneumonia]
+      airway_group: [Bronchitis, Bronchiolitis]

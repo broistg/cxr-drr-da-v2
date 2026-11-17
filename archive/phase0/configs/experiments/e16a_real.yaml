@@ -1,0 +1,16 @@
+name: e16a_real
+description: "E16a (D44): chỉ K mặt nạ CXR thật (K = 10, 25, 50, 100, 250, 500 và toàn bộ train; 3 tập con theo seed). Chọn checkpoint theo Dice trên val đích (có nhãn: ghi rõ). Chạy: python scripts/run_suite.py configs/experiments/e16a_real.yaml --train-script scripts/train_seg.py"
+train-script: scripts/train_seg.py
+defaults:
+  arm: real
+  out-dir: outputs/e16
+seeds: [0, 1, 2]
+variants:
+  - {name: real_k10, args: {k: 10}}
+  - {name: real_k25, args: {k: 25}}
+  - {name: real_k50, args: {k: 50}}
+  - {name: real_k100, args: {k: 100}}
+  - {name: real_k250, args: {k: 250}}
+  - {name: real_k500, args: {k: 500}}
+  - {name: real_all, args: {k: 0}}
+summary: false

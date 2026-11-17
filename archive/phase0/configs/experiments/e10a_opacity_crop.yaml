@@ -1,0 +1,19 @@
+name: e10a_opacity_crop
+description: "E10a với ảnh đích cắt theo hộp mặt nạ phổi (D41): kiểm tra A0 có dựa vào viền/chữ/phơi sáng ngoài phổi không. Cần: prep_covid19_radiography.py --task opacity --crop-lungs. Đường cơ sở thống kê ảnh sẽ được tính lại trên ảnh đã cắt."
+defaults:
+  profile: moderate
+  views: [ap]
+  val-fold: 0
+  select: source_val
+  out-dir: outputs/e10_opacity_crop
+  vindr-dir: data/processed/cxr_adult_opacity_crop
+seeds: [0, 1, 2]
+variants:
+  - {name: a0_crop, args: {arm: a0}}
+  - {name: a0_crop_shuffled, args: {arm: a0, shuffle-labels: true}}
+  - {name: a2_crop, args: {arm: a2}, seeds: [0]}
+diagnostics: [confounds]
+diagnostic_args:
+  confounds: {out-root: outputs/e10_opacity_crop, vindr-dir: data/processed/cxr_adult_opacity_crop}
+summary: true
+summary_args: {dir: outputs/e10_opacity_crop}

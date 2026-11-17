@@ -1,0 +1,14 @@
+name: e16a_drr2real
+description: "E16a (D44, R3): khởi tạo từ checkpoint DRR-only cùng seed (cần chạy e16a_drr trước) rồi tinh chỉnh K mặt nạ thật. So với e16a_real cùng K. Chạy: python scripts/run_suite.py configs/experiments/e16a_drr2real.yaml --train-script scripts/train_seg.py"
+train-script: scripts/train_seg.py
+defaults:
+  arm: real
+  out-dir: outputs/e16
+  init-run: "seg_drr_moderate_f0_s{seed}"
+seeds: [0, 1, 2]
+variants:
+  - {name: init_k10, args: {k: 10}}
+  - {name: init_k25, args: {k: 25}}
+  - {name: init_k50, args: {k: 50}}
+  - {name: init_k100, args: {k: 100}}
+summary: false

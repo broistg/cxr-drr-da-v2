@@ -1,0 +1,22 @@
+name: e12_confirm_fda
+description: "Lặp FDA β=0,05 ở fold CT 1-3 (D41: biến thể đạt ngưỡng chỉ được tin sau khi lặp ở fold khác) và null xáo nhãn cho FDA (fold 0). So với a0_fold{1,2,3} của e10a_folds.yaml (0,774 / 0,812 / 0,827) và a0 fold 0 (0,821). Đọc: FDA có tác dụng nếu trung bình hơn A0 cùng fold từ 0,03 ở ít nhất 2/3 fold và null xáo nhãn không tăng so với null không FDA."
+defaults:
+  arm: a0
+  profile: moderate
+  views: [ap]
+  select: source_val
+  pixel-adapt: fda
+  fda-beta: 0.05
+  out-dir: outputs/e10_opacity
+  vindr-dir: data/processed/cxr_adult_opacity
+seeds: [0, 1, 2]
+variants:
+  - {name: a0_fda5_fold1, args: {val-fold: 1}}
+  - {name: a0_fda5_fold2, args: {val-fold: 2}}
+  - {name: a0_fda5_fold3, args: {val-fold: 3}}
+  - {name: a0_fda5_shuffled, args: {val-fold: 0, shuffle-labels: true}}
+diagnostics: [confounds]
+diagnostic_args:
+  confounds: {out-root: outputs/e10_opacity, vindr-dir: data/processed/cxr_adult_opacity}
+summary: true
+summary_args: {dir: outputs/e10_opacity}

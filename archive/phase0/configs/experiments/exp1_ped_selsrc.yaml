@@ -1,0 +1,17 @@
+name: exp1_ped_selsrc
+description: "Mục 1: đích nhi (VinDr-PCXR) với A0 chọn checkpoint bằng source_val (không dùng nhãn đích), 4 fold CT x 3 seed, và A2 trần 3 seed (trước đây 1 seed). So với A0 target_val 0,660 (cuối 0,623, null 0,524) và mức đường tắt 0,684. Đọc: nếu A0 source_val vẫn thấp hơn hoặc ngang 0,684 thì kết luận 'không vượt đường tắt' không phụ thuộc cách chọn checkpoint."
+defaults:
+  profile: moderate
+  views: [ap]
+  select: source_val
+  out-dir: outputs/exp1
+seeds: [0, 1, 2]
+variants:
+  - {name: a0_selsrc_f0, args: {arm: a0, val-fold: 0}}
+  - {name: a0_selsrc_f1, args: {arm: a0, val-fold: 1}}
+  - {name: a0_selsrc_f2, args: {arm: a0, val-fold: 2}}
+  - {name: a0_selsrc_f3, args: {arm: a0, val-fold: 3}}
+  - {name: a2_supervised_3seeds, args: {arm: a2}}
+diagnostics: [confounds]
+summary: true
+summary_args: {dir: outputs/exp1}

@@ -1,0 +1,15 @@
+name: e18e_adult_a2
+description: "E18e (D52): trần người lớn (A2, học từ ảnh thật) với source_val, 3 seed, thay cho 1 seed target_val (0,985). Cùng cách chọn và số seed với A2 nhi (0,824 ± 0,026). 3 run, cần dữ liệu cxr_adult_opacity."
+defaults:
+  arm: a2
+  select: source_val
+  out-dir: outputs/e10_opacity
+  vindr-dir: data/processed/cxr_adult_opacity
+seeds: [0, 1, 2]
+variants:
+  - {name: a2_selsrc_3seeds, args: {}}
+diagnostics: [confounds]
+diagnostic_args:
+  confounds: {out-root: outputs/e10_opacity, vindr-dir: data/processed/cxr_adult_opacity}
+summary: true
+summary_args: {dir: outputs/e10_opacity}

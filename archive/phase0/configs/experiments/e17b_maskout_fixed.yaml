@@ -1,0 +1,21 @@
+name: e17b_maskout_fixed
+description: "E17b (D50): giữ nguyên tỉ lệ ảnh, chỉ giữ vùng trong MỘT hộp cố định ở giữa (phân vị 90% cỡ hộp phổi), ngoài hộp = 0. Viền không mang thông tin nhãn nên đây là phép thử sạch cho 'bỏ nội dung ngoài phổi'. A0 ảnh gốc 0,809, crop 0,892. Cần: prep_covid19_radiography.py --task opacity --frame maskout_fixed. Đọc trước (D50): tăng >= +0,03 so với 0,809, >= 3/4 fold dương và null (e17b_null_*) <= ~0,58 -> loại bỏ nội dung ngoài phổi có tác dụng thật; < +0,03 -> mức tăng của maskout là do hình hộp."
+defaults:
+  arm: a0
+  profile: moderate
+  views: [ap]
+  select: source_val
+  out-dir: outputs/e10_opacity_maskout_fixed
+  vindr-dir: data/processed/cxr_adult_opacity_maskout_fixed
+seeds: [0, 1, 2]
+variants:
+  - {name: a0_f0, args: {val-fold: 0}}
+  - {name: a0_f1, args: {val-fold: 1}}
+  - {name: a0_f2, args: {val-fold: 2}}
+  - {name: a0_f3, args: {val-fold: 3}}
+  - {name: a0_null_f0, args: {val-fold: 0, shuffle-labels: true}}
+diagnostics: [confounds]
+diagnostic_args:
+  confounds: {out-root: outputs/e10_opacity_maskout_fixed, vindr-dir: data/processed/cxr_adult_opacity_maskout_fixed}
+summary: true
+summary_args: {dir: outputs/e10_opacity_maskout_fixed}

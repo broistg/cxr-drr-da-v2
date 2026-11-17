@@ -1,0 +1,25 @@
+name: e18b_ped_pixel
+description: "E18b (D52): cùng bộ phương pháp với người lớn trên đích NHI (VinDr-PCXR), source_val, 4 fold CT x 3 seed: FDA beta=0,05, khớp histogram, AdaBN (tất cả trên M1 = A0). So với A0 selsrc của exp1_ped_selsrc.yaml (0,624). 36 run, khoảng 3 phút/run. Đọc (đặt trước): có tác dụng nếu hơn A0 cùng fold từ 0,03 ở >= 3/4 fold; mức đường tắt nhi 0,684."
+defaults:
+  arm: a0
+  profile: moderate
+  views: [ap]
+  select: source_val
+  out-dir: outputs/exp1
+seeds: [0, 1, 2]
+variants:
+  - {name: fda5_f0, args: {val-fold: 0, pixel-adapt: fda, fda-beta: 0.05}}
+  - {name: fda5_f1, args: {val-fold: 1, pixel-adapt: fda, fda-beta: 0.05}}
+  - {name: fda5_f2, args: {val-fold: 2, pixel-adapt: fda, fda-beta: 0.05}}
+  - {name: fda5_f3, args: {val-fold: 3, pixel-adapt: fda, fda-beta: 0.05}}
+  - {name: hist_f0, args: {val-fold: 0, pixel-adapt: hist}}
+  - {name: hist_f1, args: {val-fold: 1, pixel-adapt: hist}}
+  - {name: hist_f2, args: {val-fold: 2, pixel-adapt: hist}}
+  - {name: hist_f3, args: {val-fold: 3, pixel-adapt: hist}}
+  - {name: adabn_f0, args: {val-fold: 0, adabn: true}}
+  - {name: adabn_f1, args: {val-fold: 1, adabn: true}}
+  - {name: adabn_f2, args: {val-fold: 2, adabn: true}}
+  - {name: adabn_f3, args: {val-fold: 3, adabn: true}}
+diagnostics: [confounds]
+summary: true
+summary_args: {dir: outputs/exp1}

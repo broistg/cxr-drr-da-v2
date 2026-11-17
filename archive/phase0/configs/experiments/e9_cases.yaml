@@ -1,0 +1,8 @@
+name: e9_cases
+description: "E9: A0 with 3 or 5 CT training cases (learning curve; the full 7-case runs are in baseline_a0)."
+defaults: {arm: a0, profile: moderate, views: [ap], val-fold: 0}
+seeds: [0, 1, 2]
+variants:
+  - {name: a0_n3, args: {max-train-cases: 3}}
+  - {name: a0_n5, args: {max-train-cases: 5}}
+diagnostics: []

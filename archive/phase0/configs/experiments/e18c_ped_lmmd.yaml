@@ -1,0 +1,22 @@
+name: e18c_ped_lmmd
+description: "E18c (D52): LMMD (A1, gamma=1, khởi động 10 epoch) và gamma=0 trên đích NHI, source_val, 4 fold CT x 3 seed (trước đây chỉ fold 0, chọn bằng target_val: 0,679 / 0,677). Ghi chú D41/D44: gamma=0 KHÔNG phải source-only sạch (ảnh đích đi qua mạng, thống kê BatchNorm đổi); gọi là 'LMMD tắt'. 24 run."
+defaults:
+  arm: a1
+  profile: moderate
+  views: [ap]
+  select: source_val
+  warmup-epochs: 10
+  out-dir: outputs/exp1
+seeds: [0, 1, 2]
+variants:
+  - {name: g1_f0, args: {val-fold: 0, gamma: 1}}
+  - {name: g1_f1, args: {val-fold: 1, gamma: 1}}
+  - {name: g1_f2, args: {val-fold: 2, gamma: 1}}
+  - {name: g1_f3, args: {val-fold: 3, gamma: 1}}
+  - {name: g0_f0, args: {val-fold: 0, gamma: 0}}
+  - {name: g0_f1, args: {val-fold: 1, gamma: 0}}
+  - {name: g0_f2, args: {val-fold: 2, gamma: 0}}
+  - {name: g0_f3, args: {val-fold: 3, gamma: 0}}
+diagnostics: [confounds]
+summary: true
+summary_args: {dir: outputs/exp1}

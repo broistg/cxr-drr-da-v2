@@ -1,0 +1,19 @@
+name: e18a_null_center
+description: "E18a (D52): null xáo nhãn, source_val, khung 'center', fold 2-3 x 3 seed (E17b/D51 mới có fold 0-1 cho khung này; maskout_fixed đã đủ 4 fold). Mục đích: so null cùng 4 fold giữa các khung (ảnh gốc, center, maskout, maskout_fixed) trước khi kết luận về E17b. Cần dữ liệu khung 'center' đã chuẩn bị."
+defaults:
+  arm: a0
+  profile: moderate
+  views: [ap]
+  select: source_val
+  shuffle-labels: true
+  out-dir: outputs/e10_opacity_center
+  vindr-dir: data/processed/cxr_adult_opacity_center
+seeds: [0, 1, 2]
+variants:
+  - {name: a0_null_f2, args: {val-fold: 2}}
+  - {name: a0_null_f3, args: {val-fold: 3}}
+diagnostics: [confounds]
+diagnostic_args:
+  confounds: {out-root: outputs/e10_opacity_center, vindr-dir: data/processed/cxr_adult_opacity_center}
+summary: true
+summary_args: {dir: outputs/e10_opacity_center}

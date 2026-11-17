@@ -1,0 +1,22 @@
+name: e10b_covid
+description: "E10b (secondary, SOURCE-CONFOUNDED): positive = COVID vs negative = Normal(RSNA). Read only together with the image-statistics baseline. D38. Prepare first: python scripts/prep_covid19_radiography.py --task covid"
+defaults:
+  profile: moderate
+  views: [ap]
+  val-fold: 0
+  select: source_val                           # D41: chọn checkpoint không dùng nhãn đích
+  out-dir: outputs/e10_covid
+  vindr-dir: data/processed/cxr_adult_covid       # train_cls.py reads manifest.csv + PNGs here (same layout as VinDr-PCXR)
+seeds: [0, 1, 2]
+variants:
+  - {name: a0, args: {arm: a0}}
+  - {name: a0_shuffled, args: {arm: a0, shuffle-labels: true}}
+  - {name: a1_g0, args: {arm: a1, gamma: 0}}
+  - {name: a1_g1, args: {arm: a1, gamma: 1}}
+  - {name: a2_supervised, args: {arm: a2}, seeds: [0]}
+# gradcam / occlusion need lesion boxes, which this database does not have -> only the confound/image-statistics check
+diagnostics: [confounds]
+diagnostic_args:
+  confounds: {out-root: outputs/e10_covid, vindr-dir: data/processed/cxr_adult_covid}
+summary: true
+summary_args: {dir: outputs/e10_covid}

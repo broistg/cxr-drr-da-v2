@@ -1,0 +1,8 @@
+name: baseline_a0
+description: "A0 (DRR only) reference runs and the label-shuffled null (D22-D24)."
+defaults: {arm: a0, profile: moderate, views: [ap], val-fold: 0}
+seeds: [0, 1, 2]
+variants:
+  - {name: a0, args: {}}
+  - {name: a0_shuffled, args: {shuffle-labels: true}}
+diagnostics: [confounds]

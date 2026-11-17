@@ -1,0 +1,11 @@
+# Máy phòng thí nghiệm: CHƯA ĐO. Có thể GPU 16 GB VRAM. Chạy scripts/probe_env.py rồi điền các ô null.
+name: lab16gb
+render:
+  batch_poses: null       # thử 2, 4... và ghi bộ nhớ đỉnh bằng scripts/compare_resample.py
+  resample_mm: 1.0        # giữ 1,0 cho tới khi có kết quả kiểm chứng ở docs/COMPUTE.md mục 4
+train:
+  batch_size: null
+  amp: null               # bật sau khi so với fp32 trên một run nhỏ
+  num_workers: null       # Linux có thể > 0
+cache:
+  dir: data/cache/drr

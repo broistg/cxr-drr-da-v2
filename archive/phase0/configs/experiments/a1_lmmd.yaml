@@ -1,0 +1,9 @@
+name: a1_lmmd
+description: "A1 reference runs: unsupervised LMMD (gamma 0 control, gamma 1) and the oracle-pseudo-label DIAGNOSTIC (not a method)."
+defaults: {arm: a1, profile: moderate, views: [ap], val-fold: 0}
+seeds: [0, 1, 2]
+variants:
+  - {name: gamma0, args: {gamma: 0}}
+  - {name: gamma1, args: {gamma: 1}}
+  - {name: oracle, args: {gamma: 1, oracle-pseudo: true}}
+diagnostics: [confounds]

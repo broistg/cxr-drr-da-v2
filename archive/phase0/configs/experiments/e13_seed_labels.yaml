@@ -1,0 +1,9 @@
+name: e13_seed_labels
+description: "E13: LMMD with K true target labels, K labels oversampled to 25% of each target batch (D31). Three variants per K isolate LMMD from the labels."
+defaults: {arm: a1, profile: moderate, views: [ap], val-fold: 0, seed-labels: 100, seed-frac: 0.25}
+seeds: [0, 1, 2]
+variants:
+  - {name: lmmd_k100, args: {gamma: 1}}
+  - {name: labels_only_k100, args: {gamma: 0, seed-supervised: true}}
+  - {name: lmmd_plus_labels_k100, args: {gamma: 1, seed-supervised: true}}
+diagnostics: [confounds]

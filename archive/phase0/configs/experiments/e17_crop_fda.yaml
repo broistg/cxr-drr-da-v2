@@ -1,0 +1,22 @@
+name: e17_crop_fda
+description: "E17 (D47): FDA beta=0,05 trên ảnh đích đã cắt phổi, fold 0-3. So với A0 crop cùng fold (0,887 / 0,883 / 0,886 / 0,911; trung bình 0,892; epoch cuối 0,800). FDA bổ sung trên crop nếu epoch chọn hơn A0 crop từ 0,03 ở >= 3/4 fold; nếu không: FDA không bổ sung. Cần ảnh cắt (prep --crop-lungs). Ghi cùng thư mục với A0 crop."
+defaults:
+  arm: a0
+  profile: moderate
+  views: [ap]
+  select: source_val
+  pixel-adapt: fda
+  fda-beta: 0.05
+  out-dir: outputs/e10_opacity_crop
+  vindr-dir: data/processed/cxr_adult_opacity_crop
+seeds: [0, 1, 2]
+variants:
+  - {name: a0_f0, args: {val-fold: 0}}
+  - {name: a0_f1, args: {val-fold: 1}}
+  - {name: a0_f2, args: {val-fold: 2}}
+  - {name: a0_f3, args: {val-fold: 3}}
+diagnostics: [confounds]
+diagnostic_args:
+  confounds: {out-root: outputs/e10_opacity_crop, vindr-dir: data/processed/cxr_adult_opacity_crop}
+summary: true
+summary_args: {dir: outputs/e10_opacity_crop}

@@ -1,0 +1,20 @@
+name: e1_degrade
+description: "E1 trên E10a (D41): làm mờ và thêm nhiễu cho DRR khi huấn luyện (mô phỏng ảnh kém chất lượng). Mức mờ/nhiễu là giả định: sigma tối đa 2 hoặc 4 pixel; nhiễu tối đa 0,04 (augment sẵn đã có nhiễu đến 0,02). Chọn checkpoint theo nguồn giữ ra; so với a0_selsrc."
+defaults:
+  arm: a0
+  profile: moderate
+  views: [ap]
+  val-fold: 0
+  select: source_val
+  out-dir: outputs/e10_opacity
+  vindr-dir: data/processed/cxr_adult_opacity
+seeds: [0, 1, 2]
+variants:
+  - {name: a0_blur2,       args: {drr-blur: 2}}
+  - {name: a0_blur4,       args: {drr-blur: 4}}
+  - {name: a0_blur2_nz4,   args: {drr-blur: 2, drr-noise: 0.04}}
+diagnostics: [confounds]
+diagnostic_args:
+  confounds: {out-root: outputs/e10_opacity, vindr-dir: data/processed/cxr_adult_opacity}
+summary: true
+summary_args: {dir: outputs/e10_opacity}

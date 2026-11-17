@@ -1,0 +1,16 @@
+name: e16a_drr
+description: "E16a (D44): phân đoạn chỉ huấn luyện trên DRR (mặt nạ CRIV), đánh giá trên QaTa/COVID-QU-Ex test. Biến thể: DRR-only, + FDA β=0,05, null hoán mặt nạ. Chạy: python scripts/run_suite.py configs/experiments/e16a_drr.yaml --train-script scripts/train_seg.py. Rồi: scripts/seg_priors.py, scripts/seg_localize_vindr.py, scripts/summarize_seg.py. Cách đọc R1, R2, R4 trong docs/experiment_design_seg.md."
+train-script: scripts/train_seg.py
+defaults:
+  arm: drr
+  profile: moderate
+  views: [ap]
+  val-fold: 0
+  out-dir: outputs/e16
+seeds: [0, 1, 2]
+variants:
+  - {name: drr, args: {}}
+  - {name: drr_nullmask, args: {null-masks: true}}
+  - {name: drr_fda5, args: {pixel-adapt: fda, fda-beta: 0.05}}
+summary: false
+# (không có biến thể crop: bộ QaTa-COV19 không có mặt nạ phổi; xem D48)
