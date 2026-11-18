@@ -12,6 +12,7 @@ Với từng dấu hiệu (đông đặc, tràn dịch, tim to, tràn khí): ả
 1. `docs/ONBOARDING.md`: bắt đầu trong một ngày.
 2. `docs/PROTOCOL.md`: giao thức thí nghiệm chung (bài học từ Giai đoạn 0). **Đọc trước khi chạy bất cứ thí nghiệm nào.**
 3. `docs/DATA_ACCESS.md`: dataset, giấy phép, cách xin quyền, ai đã có quyền.
+   [Tái tạo manifest ReX và tải đúng cặp CT-RATE/mask](docs/REX_DRR_DATASET_PLAN.md#tái-tạo-manifest-và-tải-chọn-lọc).
 4. `docs/COMPUTE.md`: máy tính (máy cá nhân 6 GB, máy lab), cấu hình, quyết định resample.
 5. `CONTRIBUTING.md`: quy trình đóng góp, review, ghi quyết định.
 6. `docs/ARCHITECTURE.md`: cấu trúc mã và giao diện giữa các module.

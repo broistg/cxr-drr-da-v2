@@ -1,10 +1,10 @@
 """ReXGroundingCT: đọc ``dataset.json`` và đếm CT/tổn thương theo nhóm (không cần mask/CT).
 
-GIẢ ĐỊNH về định dạng (chưa kiểm trên tệp thật trong repo này; sửa ``iter_entries`` nếu khác):
+Định dạng entry đối chiếu dataset card chính thức ngày 2026-11-17:
   - top-level là dict ``{split: {volume_name: entry}}`` hoặc ``{split: [entry,...]}`` (entry có ``name``);
-  - entry có ``categories`` (danh sách mã như "2g" hoặc dict mã -> ...), ``pixels`` (số voxel, tuỳ chọn),
+  - entry có ``categories`` (danh sách mã như "2g" hoặc dict finding index -> mã), ``pixels`` (số voxel, tuỳ chọn),
     ``findings`` (câu mô tả, tuỳ chọn). Mã nhóm trích bằng regex ``[12][a-h]``.
-Số mong đợi (docs/DATA_ACCESS.md, đếm tay từ tệp thật): 2g 18 tổn thương/15 CT, 2e 241/186, 2b 1384/924 (train+val).
+Không coi thiếu annotation là âm tính; thống kê không thay thế kiểm tra nhãn.
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ _CAT = re.compile(r"[12][a-h]")
 
 def _codes(cats) -> list[str]:
     if isinstance(cats, dict):
-        cats = list(cats)
+        cats = list(cats.values())
     if isinstance(cats, str):
         cats = [cats]
     return [m.group(0) for c in (cats or []) for m in [_CAT.search(str(c))] if m]
