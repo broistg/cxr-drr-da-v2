@@ -36,6 +36,19 @@ def test_count_by_category_and_splits():
     assert R.patient_overlap(_data()) == {"1"}          # số 1 ở cả train_1 và valid_1 (khác bệnh nhân thật nếu giữ tiền tố)
 
 
+def test_count_official_finding_index_category_mapping():
+    data = {"train": [
+        {"name": "train_1_a_1.nii.gz", "categories": {"0": "2g", "1": "2b", "2": "2b"}},
+        {"name": "train_1_a_2.nii.gz", "categories": {"0": "2g"}},
+        {"name": "train_2_a_1.nii.gz", "categories": {}},
+    ]}
+    counts = R.count_by_category(data)
+    assert counts == {
+        "2b": {"lesions": 2, "ct": 1, "patients": 1},
+        "2g": {"lesions": 2, "ct": 2, "patients": 1},
+    }
+
+
 def test_make_folds_groups_by_patient_and_is_deterministic():
     from drr_pipeline import splits as SP
     cases = [f"train_{p}_{s}_1" for p in range(12) for s in "ab"] + ["valid_3_a_1"]

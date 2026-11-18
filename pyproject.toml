@@ -14,6 +14,7 @@ dependencies = ["numpy", "nibabel", "pyyaml", "scipy", "matplotlib", "pillow"]
 render = ["diffdrr"]
 dev = ["pytest"]
 cxr = ["pydicom"]
+rex = ["huggingface-hub>=1,<2"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
