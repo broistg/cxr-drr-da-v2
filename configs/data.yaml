@@ -4,7 +4,23 @@
 # Secrets (e.g. a Hugging Face token for ReXGroundingCT) do NOT go here: use a gitignored .env.
 data_root: data/raw          # relative paths are resolved from the repo root
 
-datasets: {}
+datasets:
+  # ReX+CT-RATE đã ghi lại bằng scripts/prepare_ctrate_case.py (HU, spacing, affine đúng); nhãn 1 = tổn thương của dấu hiệu, không có mask phổi.
+  # root tính từ data_root (data/raw), nên '../processed/...' = data/processed/... (nếu đặt DRR_DATA_ROOT khác, sửa root cho khớp).
+  rex_consolidation:
+    root: ../processed/oriented/consolidation
+    ct_dir: ct
+    mask_mode: combined
+    combined_dir: labels
+    infection_ids: [1]
+    lung_ids: []
+  rex_pleural_effusion:
+    root: ../processed/oriented/pleural_effusion
+    ct_dir: ct
+    mask_mode: combined
+    combined_dir: labels
+    infection_ids: [1]
+    lung_ids: []
 # Nguồn CT (DRR). Điền khi có dữ liệu thật; lược đồ giữ nguyên để generate_drr/inspect_dataset/render_case dùng được:
 #   <tên>:
 #     root: <thư mục dưới data_root>

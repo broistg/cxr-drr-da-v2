@@ -65,6 +65,12 @@ def main():
     ap.add_argument("--shuffle-labels", action="store_true", help="sanity control: permute the training labels")
     ap.add_argument("--min-pct", type=float, default=None, help="override positive_min_inf_pct_of_foot")
     ap.add_argument("--sign", default=None, help="tên dấu hiệu (configs/signs/<tên>.yaml): dùng kiểu DRR, trọng số và luật nhãn của nó thay cho configs/drr.yaml (D57)")
+    ap.add_argument("--crossfit", type=Path, default=None,
+                    help="D59: crossfit.csv (scripts/make_target_folds.py). Đích = tập gộp VinDr-PCXR: chấm fold --target-fold, thích nghi/huấn luyện trên "
+                         "ảnh ngoài fold. Cần --sign (box_classes), --select source_val và --annotations-train/test.")
+    ap.add_argument("--target-fold", type=int, default=0, help="fold đích được chấm khi có --crossfit")
+    ap.add_argument("--annotations-train", type=Path, default=ROOT / "data/raw/vindr-pcxr/annotations_train.csv")
+    ap.add_argument("--annotations-test", type=Path, default=ROOT / "data/raw/vindr-pcxr/annotations_test.csv")
     ap.add_argument("--drr-config", type=Path, default=ROOT / "configs/drr.yaml")
     ap.add_argument("--splits", type=Path, default=ROOT / "configs/splits.yaml")
     ap.add_argument("--drr-out", type=Path, default=Path("outputs/drr"))
@@ -84,6 +90,8 @@ def main():
     cfg = yaml.safe_load(a.drr_config.read_text(encoding="utf8"))
     epochs = a.epochs or (15 if a.arm == "a2" else 60)
     min_pct = T.min_pct_from(cfg, a.min_pct)
+    if a.crossfit:
+        assert a.sign and a.select == "source_val", "--crossfit cần --sign và --select source_val (không chọn checkpoint bằng nhãn đích)"
     if a.pixel_adapt != "none" or a.drr_blur > 0 or a.drr_noise > 0:
         assert a.arm in ("a0", "a1"), "--pixel-adapt / --drr-blur / --drr-noise đổi nguồn DRR: chỉ nhánh a0 / a1"
     run = CE.run_name(a)
@@ -103,25 +111,40 @@ def main():
         print(f"dấu hiệu {a.sign}: DRR {SG.load_sign(a.sign)['drr']['kind']}, luật nhãn {SG.load_sign(a.sign)['label_rule']}")
     else:
         mk = T.source_kwargs(cfg, min_pct)
-    src_val = T.SourceDRR(a.drr_out, a.profile, a.views, val_cases, eval_mode=True, **mk)
+    case_roles = T.load_roles(a.splits)
+    if case_roles:
+        print(f"vai trò CT từ {a.splits.name}: {sum(v == 'positive' for v in case_roles.values())} dương, {sum(v == 'negative' for v in case_roles.values())} âm")
+    src_val = T.SourceDRR(a.drr_out, a.profile, a.views, val_cases, eval_mode=True, case_roles=case_roles, **mk)
     print(f"source validation (fold {a.val_fold}: {val_cases}): {len(src_val)} images, {int(src_val.labels().sum())} positive,"
           f" {src_val.dropped} positive poses dropped by the rule")
     rows = TD.read_manifest(a.vindr_dir)
     by = lambda sp: TD.rows_of(rows, sp)
-    xv, yv, _, _ = load_png_split(a.vindr_dir, by("target_val"), MAIN)
-    xt, yt, idt, rolet = load_png_split(a.vindr_dir, by("test"), TEST_ROLES)
+    if a.crossfit:
+        from drr_pipeline import sign_labels as SL
+        from drr_pipeline import signs as SG
+        from drr_pipeline import target_crossfit as TC
+        by_image = {}
+        for p in (a.annotations_train, a.annotations_test):
+            by_image.update(SL.classes_by_image(p))
+        cf = TC.split_for_fold(rows, TC.read_folds(a.crossfit), by_image, SG.load_sign(a.sign)["target"]["box_classes"], a.target_fold, seed=a.seed)
+        val_rows, test_rows, tr_rows, pool_rows, test_roles = cf["val"], cf["eval"], cf["train_labeled"], cf["pool"], MAIN
+        print(f"cross-fit đích fold {a.target_fold}: chấm {len(test_rows)} ảnh, pool không nhãn {len(pool_rows)}, val(log) {len(val_rows)}")
+    else:
+        val_rows, test_rows, tr_rows, pool_rows, test_roles = by("target_val"), by("test"), by("train_target"), by("train_target"), TEST_ROLES
+    xv, yv, _, _ = load_png_split(a.vindr_dir, val_rows, MAIN)
+    xt, yt, idt, rolet = load_png_split(a.vindr_dir, test_rows, test_roles)
     d = CT.Data(arm=a.arm, n_tr=0, ytr=None, src_val=src_val, xv=xv, yv=yv)
     if a.arm in ("a0", "a1"):
-        d.src_tr = T.SourceDRR(a.drr_out, a.profile, a.views, train_cases, **mk)
+        d.src_tr = T.SourceDRR(a.drr_out, a.profile, a.views, train_cases, case_roles=case_roles, **mk)
         d.n_tr, d.ytr = len(d.src_tr), d.src_tr.labels()
         print(f"source train: {d.n_tr} images, {int(d.ytr.sum())} positive, {d.src_tr.dropped} positive poses dropped")
     else:
-        d.xtr, d.ytr, _, _ = load_png_split(a.vindr_dir, by("train_target"), MAIN)
+        d.xtr, d.ytr, _, _ = load_png_split(a.vindr_dir, tr_rows, MAIN)
         d.n_tr = len(d.ytr)
         print(f"VinDr train_target: {d.n_tr} images, {int(d.ytr.sum())} positive")
     if a.arm == "a1" or a.pixel_adapt != "none" or a.adabn:
         # pool đích không nhãn: mọi vai trò của train_target; nhãn KHÔNG dùng (trừ --seed-labels)
-        d.xpool, d.ypool, _, _ = load_png_split(a.vindr_dir, by("train_target"), ALL_ROLES)
+        d.xpool, d.ypool, _, _ = load_png_split(a.vindr_dir, pool_rows, ALL_ROLES)
         print(f"pool đích không nhãn: {len(d.xpool)} ảnh")
     if a.seed_labels or a.seed_supervised:
         CT.make_seed_labels(d, a)

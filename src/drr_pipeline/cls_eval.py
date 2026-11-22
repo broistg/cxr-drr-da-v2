@@ -18,7 +18,8 @@ from .target_data import MAIN
 
 def run_name(a) -> str:
     """Tên run xác định bởi các cờ (a: argparse.Namespace). Chỉ thêm hậu tố khi cờ khác mặc định."""
-    s = f"{a.arm}_{a.profile}_{'+'.join(a.views)}_f{a.val_fold}_s{a.seed}" + (f"_{a.sign}" if getattr(a, "sign", None) else "")
+    s = f"{a.arm}_{a.profile}_{'+'.join(a.views)}_f{a.val_fold}_s{a.seed}" + (f"_{a.sign}" if getattr(a, "sign", None) else "") \
+        + (f"_cf{a.target_fold}" if getattr(a, "crossfit", None) else "")
     if a.arm == "a1":
         s += f"_g{a.gamma:g}_w{a.warmup_epochs}"
         if a.seed_labels:

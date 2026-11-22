@@ -122,3 +122,25 @@ Có 862 CT duy nhất trong danh sách ghép mask. Một CT có thể xuất hi�
 - [ReXGroundingCT leaderboard](https://rexrank.ai/ReXGroundingCT/index): nhóm bệnh và mức độ đầy đủ annotation giữa train và val/test.
 
 Hai nguồn HF yêu cầu tài khoản đã chấp nhận điều khoản tương ứng. Không ghi token vào mã, manifest hoặc log.
+
+## Chuẩn bị trước khi kiểm tra ca âm (D60; chỉ cần metadata, chưa tải CT)
+Chọn ca âm và đo mức nhiễu chỉ dùng hai JSON của ReX (`dataset.json`, `reports_dataset.json`), nên không tải CT hay mask. Làm trên máy được phép giữ dữ liệu (máy cá nhân hoặc máy lab theo `docs/ACCESS_VINDR_PCXR.md` mục 4).
+1. **Tài khoản Hugging Face** có chấp nhận điều khoản của `rajpurkarlab/ReXGroundingCT` (bước metadata cần quyền này). Điều khoản của CT-RATE chỉ cần khi tải CT, chưa cần ở bước này.
+2. **Token đọc** (Hugging Face → Settings → Access Tokens, loại Read). Không dán token vào chat, mã hay file commit.
+3. **Môi trường** (PowerShell, trong thư mục repo, môi trường `diffdrr` hoặc môi trường Python 3.12 của bạn):
+   ```powershell
+   python -m pip install -e ".[rex]"
+   hf auth login                      # dán token ở lời nhắc
+   ```
+4. **Lấy metadata** (nhỏ, vài MB đến vài chục MB, chưa đo):
+   ```powershell
+   python scripts/download_rex.py --root data/rex-drr --stage metadata
+   ```
+   Kiểm tra có `data/rex-drr/raw/rexgroundingct/dataset.json` và `reports_dataset.json`. Nếu lỗi 401/403: chưa chấp nhận điều khoản hoặc token sai quyền; nếu lỗi mạng: chạy lại, bước này chạy lại an toàn. Chạy `git status` và xác nhận không có file nào dưới `data/` hiện ra (đã bị `.gitignore` chặn).
+5. **Chạy kiểm tra ca âm và đo nhiễu:**
+   ```powershell
+   python scripts/select_negatives.py --root data/rex-drr --audit
+   ```
+   In và ghi `outputs/negatives/negatives_audit.md` (và `.json`) chỉ gồm số đếm theo dấu hiệu (tràn khí, tràn dịch, đông đặc) và split. Danh sách ca âm nằm ở `data/rex-drr/indexes/<dấu hiệu>/negatives.csv` (không commit).
+6. **Gửi lại** `negatives_audit.md` (không có câu báo cáo, chỉ số đếm). Các con số cần đọc: số CT không có finding nào; `share_mention` ở val/test (chú giải đầy đủ) so với train; số ca âm có phủ định rõ và không nhắc.
+Chưa làm ở bước này: tải CT, chạy TotalSegmentator, `prepare_rex_cohort.py`, `plan_rex_masks.py`.

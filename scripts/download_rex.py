@@ -69,7 +69,7 @@ def matching_ct_files(api, sources, paths):
     return entries
 
 
-def build_download_plan(mask_plan, sources, api, include_cardiomegaly=False):
+def build_download_plan(mask_plan, sources, api, include_cardiomegaly=False, extra_ct=None):
     if (mask_plan["repo"], mask_plan["revision"]) != (sources["rex_repo"], sources["rex_revision"]):
         raise ValueError("The mask manifest must use the pinned ReX repository and revision")
 
@@ -86,6 +86,10 @@ def build_download_plan(mask_plan, sources, api, include_cardiomegaly=False):
         for name, row in heart.items():
             jobs.setdefault(name, {"volume_name": name, "patient_id": row["patient_id"], "split": row["split"],
                                    "source_split": row["source_split"], "channels": [], "mask": None})
+    # CT không có mask (ca âm, D60): chỉ tải CT; không ghi đè ca đã có mask. Mỗi dòng cần volume_name, patient_id, source_split, split.
+    for row in extra_ct or []:
+        jobs.setdefault(row["volume_name"], {"volume_name": row["volume_name"], "patient_id": row["patient_id"], "split": row["split"],
+                                             "source_split": row["source_split"], "channels": [], "mask": None})
     for name in jobs.keys() & heart.keys():
         jobs[name]["cardiomegaly_candidate"] = heart[name]
 
@@ -96,15 +100,19 @@ def build_download_plan(mask_plan, sources, api, include_cardiomegaly=False):
     missing = [{"volume_name": name, "expected_path": path}
                for name, path in paths.items() if path not in available]
     return {"sources": sources, "jobs": [jobs[name] for name in paths], "missing_ct": missing,
-            "unavailable_masks": mask_plan["unavailable_masks"], "includes_report_only_ct": include_cardiomegaly}
+            "unavailable_masks": mask_plan["unavailable_masks"], "includes_report_only_ct": include_cardiomegaly,
+            "extra_ct": sorted(r["volume_name"] for r in extra_ct or [])}
 
 
-def download_jobs(root, plan, sources, download, files="both", limit=None):
+def download_jobs(root, plan, sources, download, files="both", limit=None, only=None):
     if plan["sources"] != sources:
         raise ValueError("Download plan revisions differ from the committed source revisions")
     modes = {"both": ("mask", "ct"), "masks": ("mask",), "ct": ("ct",)}
     targets = []
-    for job in plan["jobs"][:limit]:
+    jobs = [j for j in plan["jobs"] if only is None or j["volume_name"].removesuffix(".nii.gz") in only]
+    if only is not None and len(jobs) != len(only):
+        raise ValueError(f"--only: {len(only) - len(jobs)} volume không có trong kế hoạch tải")
+    for job in jobs[:limit]:
         name = job["volume_name"]
         ct_path = original_ct_path(name)
         for kind in modes[files]:
@@ -153,7 +161,9 @@ def main():
     parser.add_argument("--stage", required=True, choices=("metadata", "plan", "download"))
     parser.add_argument("--mask-plan", type=Path, help="Override the local mask manifest for the plan stage")
     parser.add_argument("--include-cardiomegaly", action="store_true", help="Include CT for report-only candidates in the plan")
+    parser.add_argument("--extra-ct-list", type=Path, nargs="+", help="một hoặc nhiều CSV (volume_name,patient_id,source_split,split) của CT cần tải mà không có mask, ví dụ ca âm từ make_source_folds.py; ca trùng chỉ tính một lần")
     parser.add_argument("--files", choices=("both", "masks", "ct"), default="both")
+    parser.add_argument("--only", nargs="+", metavar="VOLUME", help="Chỉ tải các volume này (tên có hoặc không có .nii.gz); phải nằm trong kế hoạch")
     parser.add_argument("--limit", type=int, help="Download only the first N volumes from the prepared plan")
     args = parser.parse_args()
     if args.limit is not None and args.limit < 1:
@@ -171,7 +181,16 @@ def main():
             fetch_metadata(args.root, sources, HfApi(), hf_hub_download)
         elif args.stage == "plan":
             masks = read_json(args.mask_plan or manifests / "rex_mask_plan.json")
-            plan = build_download_plan(masks, sources, HfApi(), args.include_cardiomegaly)
+            extra = None
+            if args.extra_ct_list:
+                import csv
+                extra = {}
+                for path in args.extra_ct_list:
+                    with open(path, encoding="utf8", newline="") as f:
+                        for row in csv.DictReader(f):
+                            extra.setdefault(row["volume_name"], row)
+                extra = list(extra.values())
+            plan = build_download_plan(masks, sources, HfApi(), args.include_cardiomegaly, extra)
             write_json(target, plan)
             ct_bytes = sum(job["ct"]["size"] for job in plan["jobs"] if job["ct"])
             mask_bytes = sum(job["mask"]["size"] for job in plan["jobs"] if job["mask"])
@@ -180,7 +199,8 @@ def main():
                 print(f"Missing {len(plan['missing_ct'])} original CT paths; see {target.name}.", file=sys.stderr)
                 return 2
         else:
-            download_jobs(args.root, read_json(target), sources, hf_hub_download, args.files, args.limit)
+            download_jobs(args.root, read_json(target), sources, hf_hub_download, args.files, args.limit,
+                          None if not args.only else {v.removesuffix(".nii.gz") for v in args.only})
     except (HfHubHTTPError, TransportError) as exc:
         response = getattr(exc, "response", None)
         status = response.status_code if response is not None else "no HTTP response"

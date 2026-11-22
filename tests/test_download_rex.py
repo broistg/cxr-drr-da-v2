@@ -116,3 +116,18 @@ class RexDownloadTests(unittest.TestCase):
         self.assertEqual([job["path"] for job in mask_plan["jobs"]], [mask_path])
         self.assertEqual(requests, [(SOURCES["rex_repo"], name, SOURCES["rex_revision"])
                                     for name in ("dataset.json", "reports_dataset.json")])
+
+
+def test_extra_ct_list_adds_ct_only_jobs():
+    """CT không có mask (ca âm): vào kế hoạch với mask=None, không ghi đè ca đã có mask."""
+    fx = fixtures()
+    existing = fx["jobs"][0]["volume_name"]
+    extra = [{"volume_name": "train_900_a_1.nii.gz", "patient_id": "train_900", "source_split": "train", "split": "train"},
+             {"volume_name": existing, "patient_id": "x", "source_split": "train", "split": "train"}]
+    ct = original_ct_path("train_900_a_1.nii.gz")
+    cts = {original_ct_path(j["volume_name"]): file_info(original_ct_path(j["volume_name"]), CT_DATA) for j in fx["jobs"]}
+    cts[ct] = file_info(ct, CT_DATA)
+    plan = build_download_plan(fx, SOURCES, FakeHub(cts), extra_ct=extra)
+    byname = {j["volume_name"]: j for j in plan["jobs"]}
+    assert byname["train_900_a_1.nii.gz"]["mask"] is None and byname["train_900_a_1.nii.gz"]["channels"] == []
+    assert byname[existing]["mask"] is not None and "train_900_a_1.nii.gz" in plan["extra_ct"]

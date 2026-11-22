@@ -22,6 +22,15 @@ def load_splits(path: Path) -> Dict[int, List[str]]:
     return {int(k): list(v) for k, v in cfg["folds"].items()}
 
 
+def load_roles(path: Path) -> Optional[Dict[str, str]]:
+    """Vai trò CT theo ca ({ca: positive|negative}) nếu tệp chia fold có khoá ``roles`` (scripts/make_source_folds.py), nếu không None."""
+    r = yaml.safe_load(Path(path).read_text(encoding="utf8")).get("roles")
+    if r is not None:
+        bad = {v for v in r.values()} - {"positive", "negative"}
+        assert not bad, f"vai trò không hợp lệ trong roles: {bad}"
+    return r
+
+
 def cases_for(folds: Dict[int, List[str]], keep_folds: Sequence[int]) -> List[str]:
     return [c for f in keep_folds for c in folds[f]]
 
@@ -88,7 +97,8 @@ class SourceDRR:
 
     def __init__(self, cache_root: Path, profile: str, views: Sequence[str], cases: Sequence[str], weights,
                  thresholds, normal_w, T1: float = 0.0, min_px: int = 1, min_pct: float = 0.1,
-                 eval_cell: Tuple[int, int] = (6, 5), eval_mode: bool = False):
+                 eval_cell: Tuple[int, int] = (6, 5), eval_mode: bool = False,
+                 case_roles: Optional[Dict[str, str]] = None):
         self.weights, self.thresholds, self.normal_w, self.T1 = weights, list(thresholds), normal_w, T1
         self.eval_cell, self.eval_mode = eval_cell, eval_mode
         self.arr: Dict[Tuple[str, str], Dict[str, np.ndarray]] = {}
@@ -96,12 +106,16 @@ class SourceDRR:
         self.kept: Dict[Tuple[str, str, int], np.ndarray] = {}
         self.dropped = 0
         for case in cases:
+            role = case_roles.get(case) if case_roles else None
+            assert case_roles is None or role is not None, f"ca {case} không có trong roles"
             for view in views:
                 z = D.load_cache(D.cache_path(cache_root, profile, view, case))
                 self.arr[(case, view)] = z
-                for i in range(len(z["M_normal"])):
+                # case_roles (D60): CT dương chỉ cho tư thế dương (không dùng ảnh "thường" tạo bằng trọng số), CT âm chỉ cho tư thế
+                # "thường" render bằng đúng trọng số của dấu hiệu (plain: cùng trọng số với dương).
+                for i in range(len(z["M_normal"]) if role != "positive" else 0):
                     self.items.append((case, view, "normal", i))
-                for i in range(len(z["M_positive"])):
+                for i in range(len(z["M_positive"]) if role != "negative" else 0):
                     k = kept_cells(z["M_positive"][i], z["R_positive"][i], weights, self.thresholds, T1, min_px, min_pct)
                     if (k[eval_cell] if eval_mode else k.any()):
                         self.kept[(case, view, i)] = k

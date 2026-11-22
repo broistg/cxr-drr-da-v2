@@ -43,7 +43,8 @@ Luồng: **CT → DRR (cache) → huấn luyện → đánh giá → kiểm tra/
 | Chạy | `train_cls`, `run_suite` |
 | Tổng hợp | `summarize_exp1`, `method_table`, `slide_numbers` |
 | Kiểm tra | `diagnose` (mã ở `scripts/diag/`) |
-| B0 / cross-fit đích | `baseline_b0.py`, `make_target_folds.py`; `b0.py`, `sign_labels.py`, `crossfit.py` |
+| B0 / cross-fit đích | `baseline_b0.py`, `make_target_folds.py`; `b0.py`, `sign_labels.py`, `crossfit.py`, `target_crossfit.py` (chia đích theo fold cho `train_cls.py --crossfit`) |
+| Ca âm và fold nguồn (D60) | `prepare_ctrate_case.py` (`ctrate_geometry.py`: HU, spacing, affine CT-RATE), `fetch_ctrate_metadata.py`, `preview_ct_axes.py`, `select_negatives.py` (`negatives.py`), `make_source_folds.py` (yaml có `roles`, `SourceDRR(case_roles=...)`), `inspect_rex_case.py`; hướng dẫn chạy: `docs/RUNBOOK_P1_NEG.md` |
 | Đặc trưng đóng băng | `extract_features` → `probe_foundation` (đích Giai đoạn 0 vẫn ở `target_data.TARGET_DIRS`, cần cập nhật theo đích mới) |
 | Môi trường | `probe_env` (máy/GPU), `smoke_diffdrr` (DiffDRR chạy được không; in kết quả, không phải test tự động) |
 
