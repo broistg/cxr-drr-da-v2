@@ -1,0 +1,23 @@
+# Dấu hiệu: đông đặc (nhị phân). Một tệp = một định nghĩa; nhãn dương/âm CHỈ định nghĩa ở đây (docs/PROTOCOL.md).
+name: consolidation
+status: draft                  # draft | approved (bác sĩ/thầy duyệt)
+description: "Đông đặc phổi: dương = có vùng đông đặc; âm = không có dấu hiệu bệnh nào (No finding)."
+source:                        # CT -> DRR
+  ct: ctrate                   # tên mục trong configs/data.yaml (chưa điền)
+  mask: rex                    # ReXGroundingCT nhóm 2b (đông đặc/xẹp phổi); 924 CT (train+val, xem docs/DATA_ACCESS.md)
+  mask_categories: ["2b"]
+  one_volume_per_scan: true
+  split_by: patient            # giữ tiền tố train_/valid_ (ctrate.parse_volume_name)
+target:
+  dataset: vindr_pcxr
+  box_classes: ["Consolidation"]      # lớp hộp VinDr-PCXR dùng cho B0/nhãn dương (bản nhập tay: chờ duyệt)
+  positive: "hộp Consolidation (211 ảnh trong EDA) - định nghĩa chính xác chờ duyệt"
+  negative: "No finding (đã kiểm: 0 hộp, 0 nhãn bệnh khác)"
+drr:
+  kind: plain                  # plain = trọng số bằng nhau (giao thức chính, D57); weighted = DRR4Covid (chỉ ablation)
+  weights: [1.0, 1.0, 1.0]     # (w0, w1, w2): nền, phổi, tổn thương
+  ablation_weights: [[1.0, 1.0, 3.0], [1.0, 1.0, 6.0]]   # đăng ký trước: chỉ chạy trên dấu hiệu này
+label_rule:                    # nhãn dương của một DRR: mask chiếu có đủ pixel
+  min_mask_px: 25
+  T2: 0.0                      # pi2 > T2 trên tia (pi2 = phần chiều dài tia đi qua tổn thương khi trọng số bằng nhau)
+view: [ap]

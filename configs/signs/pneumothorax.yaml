@@ -1,0 +1,19 @@
+name: pneumothorax
+status: draft
+description: "Tràn khí màng phổi. Mask thật: ReX 2g (~11 CT tràn khí thật, cần xem tay) và EFA-Net nếu được cấp; mask giả (khí ngoài phổi) cần mask phổi."
+source:
+  ct: ctrate
+  mask: rex
+  mask_categories: ["2g"]
+  pseudo_mask: {enabled: false, needs: lung_mask}
+  one_volume_per_scan: true
+  split_by: patient
+target:
+  dataset: siim_acr          # chưa có trong repo; PTX-498 chỉ để định vị (toàn dương)
+  box_classes: ["Pneumothorax"]       # VinDr-PCXR chỉ ~4 ca: B0 chỉ mô tả, không đủ để đánh giá
+  positive: "mask tràn khí SIIM-ACR (2.669 ảnh dương)"
+  negative: "ảnh không tràn khí cùng bộ SIIM"
+drr: {kind: plain, weights: [1.0, 1.0, 1.0]}
+label_rule: {min_mask_px: 25, T2: 0.0}
+view: [ap]
+risks: ["ống dẫn lưu trên X-quang tràn khí là đường tắt", "CT nằm: khí dồn ra trước"]

@@ -1,0 +1,14 @@
+# Máy lab (đo bằng scripts/probe_env.py ngày 2026-11-19; người chạy: Tiến Đạt).
+# ĐÃ ĐO: GPU NVIDIA A100-PCIE-40GB (40.960 MiB, trống 13 MiB lúc đo), RAM 515.620 MiB, 64 CPU, đĩa trống 937,6 GiB,
+#        Linux 6.8 (glibc 2.35), driver 535.230.02, Python 3.14.6; torch/torchvision/diffdrr/torchio/scipy/nibabel/pydicom CHƯA cài.
+# ĐỀ XUẤT (chưa đo): các giá trị dưới đây là điểm khởi đầu; ghi số đo vào docs/COMPUTE.md rồi sửa.
+name: lab_a100
+render:
+  batch_poses: 2          # Giai đoạn 0 (6 GB): 2 tư thế cùng lúc cần 8,6 GB ở một cấu hình; 40 GB đủ; thử 4 bằng compare_resample.py
+  resample_mm: 1.0        # giữ 1,0 cho tới khi có kiểm chứng (docs/COMPUTE.md mục 4); thử 0,75 trên tràn khí
+train:
+  batch_size: 32          # như Giai đoạn 0 (ResNet-18, 256 px); không cần tăng để vừa bộ nhớ
+  amp: true               # như Giai đoạn 0 (autocast fp16 trên CUDA)
+  num_workers: 8          # máy dùng chung 64 CPU: không chiếm hết; chỉnh theo lịch dùng chung
+cache:
+  dir: data/cache/drr

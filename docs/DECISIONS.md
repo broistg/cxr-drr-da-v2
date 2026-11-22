@@ -27,3 +27,10 @@ Quy tắc: không xoá mục cũ; kết luận bị bác bỏ thì thêm mục r
 - Bối cảnh: tim to và tràn khí cần thêm lớp (tim, khí ngoài phổi); ReX chỉ có mask tổn thương, chưa có phổi.
 - Đã làm: `weighted.category_projections(..., n_cat)` và `render.category_map(..., extra_ids)` cho n lớp (lớp 3.. = `extra_ids[i]`; tổn thương luôn là lớp 2 và thắng khi chồng); `lung_ids` có thể bỏ trống (config và `CaseRenderer`); `data.yaml` mỗi nguồn CT có thể khai `extra_ids`. Với `drr.kind: plain` (w0 = w1 = w2) ảnh và nhãn tổn thương **không phụ thuộc** mask phổi (kiểm bằng test numpy).
 - Chưa làm/chưa kiểm: phần `render.py` (torch/DiffDRR) mới qua biên dịch, chưa chạy (không có GPU/torch ở nơi soạn); `generate_drr.py` vẫn đọc một tệp nhãn gộp (`combined_dir`): cần script dựng tệp nhãn gộp từ CT-RATE + mask ReX + (phổi, tim) (nibabel; chưa viết); luật nhãn theo số pixel `min_mask_px` chưa hiệu chỉnh.
+
+## D59. Đánh giá cross-fit trên tập gộp ảnh đích VinDr-PCXR (2026-11-22; nhóm đồng ý cross-fit, đặc tả `docs/specs/P1-B0-vindr-pcxr-signs.md` mục 7)
+- Bối cảnh: test chính thức có 35 ca dương consolidation, 29 cardiomegaly, 3 tràn dịch, 0 tràn khí (B0: `docs/results_b0_vindr_pcxr.md`); CI quá rộng để phân biệt mô hình với B0.
+- Quyết định: gộp train_target + target_val + test, chia K=5 fold một lần (seed 0, phân tầng theo lớp hộp và tuổi, theo ảnh vì chưa có `patient_id`); DA thích nghi không nhãn trên ảnh ngoài fold rồi chấm fold đó; nhánh dùng nhãn đích huấn luyện trên ngoài fold. Không chia lại sau khi thấy kết quả.
+- Lưu ý trung thực: đề xuất xuất hiện sau khi thấy số ca và B0 trên test chính thức; lý do là sức mạnh thống kê, không phải giá trị B0. Số của Trần và M8 không so với Giai đoạn 0 (ít nhãn dương hơn mỗi fold). Chia theo ảnh có thể rò rỉ nếu một bệnh nhân có nhiều ảnh (chưa kiểm).
+- Việc còn lại: nối `train_cls.py` với `crossfit.csv`; chạy `make_target_folds.py` rồi `baseline_b0.py --crossfit` trên dữ liệu thật.
+

@@ -1,0 +1,16 @@
+name: cardiomegaly
+status: draft
+description: "Tim to: đặc điểm hình học (tỉ số tim/ngực), không phải tổn thương cục bộ. Ngưỡng theo tuổi chờ bác sĩ."
+source:
+  ct: ctrate
+  mask: heart                # mask tim (TotalSegmentator/RadGenome): chưa có; nhãn CT-RATE 'cardiomegaly' để chọn ca
+  one_volume_per_scan: true
+  split_by: patient
+target:
+  dataset: vindr_pcxr
+  box_classes: ["Cardiomegaly"]
+  positive: "hộp Cardiomegaly (190 ảnh)"
+  negative: "No finding"
+drr: {kind: plain, weights: [1.0, 1.0, 1.0]}
+label_rule: {min_mask_px: 0, T2: 0.0}    # nhãn ở mức CT/ảnh, không phải mask tổn thương
+view: [ap]

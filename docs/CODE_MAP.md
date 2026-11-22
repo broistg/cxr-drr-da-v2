@@ -10,6 +10,7 @@ Luồng: **CT → DRR (cache) → huấn luyện → đánh giá → kiểm tra/
 4. Huấn luyện/đánh giá: `train_cls.py` (một run) hoặc `run_suite.py <suite.yaml>` (nhiều biến thể × seed, kèm chẩn đoán).
 5. Tổng hợp: `summarize_exp1.py`, `method_table.py`, `slide_numbers.py` (CI ghép cặp, null).
 6. Kiểm tra: `diagnose.py confounds|gradcam|occlusion|label-sensitivity`.
+   B0 theo dấu hiệu (CPU, chạy trước mô hình): `make_target_folds.py` (chia cross-fit một lần, D59) rồi `baseline_b0.py --crossfit data/processed/vindr_pcxr/crossfit.csv` (mã: `b0.py`, `sign_labels.py`, `crossfit.py`).
 
 ## src/drr_pipeline
 | Mô-đun | Việc | Loại |
@@ -20,6 +21,7 @@ Luồng: **CT → DRR (cache) → huấn luyện → đánh giá → kiểm tra/
 | `dataset` | bộ đệm `.npz`, tư thế theo seed, suy ra ảnh/nhãn dương/âm | numpy |
 | `eda` | thống kê CT + mask (HU, thể tích, `usable`) | numpy |
 | `train_data` | `SourceDRR` (nguồn huấn luyện), `split_cases`, luật giữ tổn thương | numpy |
+| `signs` | đọc/kiểm `configs/signs/<dấu hiệu>.yaml` (nguồn, đích, kiểu DRR, luật nhãn) | numpy |
 | `splits` | chia fold theo bệnh nhân, ghi YAML | numpy |
 | `ctrate`, `rex` | tên volume, bệnh nhân, lọc từ khoá tràn khí; đọc `dataset.json` ReX | numpy (giả định định dạng ReX: xem docstring) |
 | `target_data`, `cxr_prep`, `cxr_eda` | đích X-quang thật: manifest, PNG, tiền xử lý, EDA CSV/DICOM | numpy |
@@ -41,6 +43,7 @@ Luồng: **CT → DRR (cache) → huấn luyện → đánh giá → kiểm tra/
 | Chạy | `train_cls`, `run_suite` |
 | Tổng hợp | `summarize_exp1`, `method_table`, `slide_numbers` |
 | Kiểm tra | `diagnose` (mã ở `scripts/diag/`) |
+| B0 / cross-fit đích | `baseline_b0.py`, `make_target_folds.py`; `b0.py`, `sign_labels.py`, `crossfit.py` |
 | Đặc trưng đóng băng | `extract_features` → `probe_foundation` (đích Giai đoạn 0 vẫn ở `target_data.TARGET_DIRS`, cần cập nhật theo đích mới) |
 | Môi trường | `probe_env` (máy/GPU), `smoke_diffdrr` (DiffDRR chạy được không; in kết quả, không phải test tự động) |
 

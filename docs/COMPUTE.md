@@ -1,6 +1,6 @@
 # Máy tính, cấu hình và quyết định resample
 
-Mã phải chạy được trên (a) máy cá nhân: Windows, RTX 3050 Laptop 6 GB (Giai đoạn 0), và (b) máy phòng thí nghiệm: **chưa biết cấu hình, có thể GPU 16 GB VRAM**. Không giả định cấu hình lab cho tới khi đo.
+Mã phải chạy được trên (a) máy cá nhân: Windows, RTX 3050 Laptop 6 GB (Giai đoạn 0), và (b) máy phòng thí nghiệm: **1 GPU NVIDIA A100 40 GB** (đo 2026-11-19, mục 7), dùng chung với nhóm khác.
 
 ## 1. Việc đầu tiên trên máy mới
 ```
@@ -9,7 +9,7 @@ python scripts/probe_env.py --out env.json
 Dán kết quả vào bảng "Máy đã đo" (mục 7). Cần biết: số GPU, VRAM mỗi GPU, RAM, ổ đĩa trống, hệ điều hành, phiên bản torch/CUDA/diffdrr, có dùng chung với nhóm khác không (hàng đợi/đặt lịch).
 
 ## 2. Hồ sơ tính toán (`configs/compute/*.yaml`)
-Cùng một thí nghiệm, đổi hồ sơ theo máy: `--compute configs/compute/local6gb.yaml` hoặc `lab16gb.yaml` (bộ chạy ghi hồ sơ vào `env.json` của run). Tham số: `render.batch_poses`, `render.resample_mm`, `train.batch_size`, `train.amp`, `train.num_workers` (Windows: 0), `cache.dir`. Giá trị của lab để trống (`null`) cho tới khi đo.
+Cùng một thí nghiệm, đổi hồ sơ theo máy: `--compute configs/compute/local6gb.yaml` hoặc `lab_a100.yaml` (bộ chạy ghi hồ sơ vào `env.json` của run). Tham số: `render.batch_poses`, `render.resample_mm`, `train.batch_size`, `train.amp`, `train.num_workers` (Windows: 0), `cache.dir`. `lab_a100.yaml`: phần cứng đã đo, các tham số khởi đầu là đề xuất chưa đo (xem chú thích trong tệp).
 
 ## 3. Đã đo ở Giai đoạn 0 (máy 6 GB; ca `coronacases_001`, 3 tư thế; `decisions.md` D14–D15)
 | resample | thời gian | bộ nhớ đỉnh | tương quan DRR | Dice nhãn tổn thương |
@@ -47,11 +47,26 @@ python scripts/compare_resample.py --case <ca> --n 3 --levels 0 0.75 1.0 1.5 2.0
 
 ## 6. Dung lượng (ước lượng cần đo)
 - Volume CT-RATE: chưa biết dung lượng; tải 3 volume trước và đo, rồi ước lượng cho 100–300 CT.
-- DRR là mảng nhỏ (256×256): bộ đệm DRR của 10 CT, 400 ảnh ở Giai đoạn 0 nhẹ; khi lên hàng trăm CT nên lưu theo ca (`data/cache/drr/<ca>.npz`).
+- DRR là mảng nhỏ (256×256): một tư thế lưu 2 × 3 lớp × 256 × 256 × float32 ≈ 1,57 MB (4 lớp: ≈ 2,1 MB); 40 tư thế mỗi ca/góc nhìn ≈ 63 MB nếu không nén (tính từ kích thước mảng, chưa đo tệp thật). 300 CT × 1 góc nhìn ≈ 19 GB; ở 512 px (D56) gấp 4 lần ≈ 75 GB. Đĩa lab trống 937,6 GiB nên đủ. Lưu theo ca (`data/cache/drr/<ca>.npz`).
 - Xoá volume sau khi sinh DRR nếu thiếu chỗ (giữ danh sách và băm để tải lại).
 
 ## 7. Máy đã đo (điền bảng)
 | Máy | GPU × VRAM | RAM | Hệ điều hành | torch / CUDA / diffdrr | Ghi chú (người đo, ngày) |
 |---|---|---|---|---|---|
 | Máy cá nhân (Giai đoạn 0) | RTX 3050 Laptop 6 GB | | Windows | torch 2.15.0+cu132, Python 3.12 | DiffDRR chạy; `batch_size: 1` render |
-| Lab | (chưa đo) | | | | |
+| Lab (`/kstn_ltsach/workspace/...`) | 1 × A100-PCIE-40GB (40.960 MiB; trống 13 MiB lúc đo) | 515.620 MiB, 64 CPU, đĩa trống 937,6 GiB | Linux 6.8, glibc 2.35, driver 535.230.02 | Python 3.14.6; **chưa cài** torch/torchvision/diffdrr/torchio/scipy/nibabel/pydicom (numpy 2.5.3) | Tiến Đạt, 2026-11-19. Cần tạo môi trường Python 3.12 như Giai đoạn 0 (mục 8) |
+
+## 8. Thiết lập môi trường trên máy lab (đề xuất; chưa chạy)
+Máy lab mới có Python 3.14.6 và chưa cài thư viện nào của pipeline. Giai đoạn 0 chạy với Python 3.12 (torch 2.15.0+cu132 trên máy cá nhân). Bản wheel cho Python 3.14 của torch, torchio, SimpleITK/diffdrr **chưa kiểm**, nên dùng môi trường riêng 3.12:
+```
+conda create -n cxrda python=3.12 -y   # hoặc: python3.12 -m venv ~/venvs/cxrda
+conda activate cxrda
+pip install torch torchvision          # driver 535 (hỗ trợ CUDA 12.2): nếu wheel mặc định đòi driver mới hơn, dùng bản cu121/cu124 theo hướng dẫn pytorch.org
+pip install diffdrr torchio
+pip install -e ".[dev,cxr]"            # numpy, scipy, nibabel, pyyaml, matplotlib, pillow, pytest, pydicom
+pytest -q
+python scripts/probe_env.py --out env.json    # chạy lại: phải thấy torch_cuda_available true
+python scripts/smoke_diffdrr.py               # DiffDRR chạy được không (in kết quả, dán nếu lỗi)
+python scripts/compare_resample.py --case <ca> --n 3 --levels 0 0.75 1.0 1.5   # khi đã có 1 CT
+```
+Lưu ý máy chung: dữ liệu hạn chế đặt trong thư mục có quyền theo nhóm (`docs/ACCESS_VINDR_PCXR.md` mục 4); chạy `nvidia-smi` trước khi chiếm GPU; đặt `CUDA_VISIBLE_DEVICES` rõ ràng; ghi lịch dùng vào kênh nhóm.

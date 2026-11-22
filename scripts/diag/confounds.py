@@ -27,6 +27,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 from drr_pipeline import target_data as TD  # noqa: E402
 from drr_pipeline.metrics import auroc  # noqa: E402
+from drr_pipeline import b0 as B  # noqa: E402
+logistic_cv_auroc = B.logistic_cv_auroc  # noqa: E402  (tests/test_confounds.py dùng C.logistic_cv_auroc)
 
 AGE_BINS = [("<6m", 0, 6), ("6-12m", 6, 12), ("12-24m", 12, 24), (">=24m", 24, 1e9)]
 
@@ -49,38 +51,6 @@ def spearman(a, b):
     return float(np.corrcoef(rank(a[ok]), rank(b[ok]))[0, 1])
 
 
-def logistic_cv_auroc(X, y, folds=5, l2=1.0, iters=300, seed=0):
-    """Out-of-fold AUROC of an L2 logistic regression (numpy, full-batch Newton)."""
-    X = np.asarray(X, dtype=float)
-    mu, sd = X.mean(0), X.std(0) + 1e-9
-    X = np.c_[(X - mu) / sd, np.ones(len(X))]
-    rng = np.random.default_rng(seed)
-    idx = rng.permutation(len(y))
-    oof = np.zeros(len(y))
-    for k in range(folds):
-        te = idx[k::folds]
-        tr = np.setdiff1d(idx, te)
-        w = np.zeros(X.shape[1])
-        for _ in range(iters):
-            p = 1 / (1 + np.exp(-np.clip(X[tr] @ w, -30, 30)))
-            g = X[tr].T @ (p - y[tr]) + l2 * np.r_[w[:-1], 0]
-            H = (X[tr].T * (p * (1 - p))) @ X[tr] + l2 * np.diag(np.r_[np.ones(X.shape[1] - 1), 0]) + 1e-6 * np.eye(X.shape[1])
-            step = np.linalg.solve(H, g)
-            w -= step
-            if np.max(np.abs(step)) < 1e-6:
-                break
-        oof[te] = X[te] @ w
-    return auroc(y, oof)
-
-
-def image_factors(png_path):
-    from PIL import Image
-    a = np.asarray(Image.open(png_path).convert("L"), dtype=float)
-    h, w = a.shape
-    c = a[h // 4: 3 * h // 4, w // 4: 3 * w // 4]
-    return {"img_mean": a.mean(), "img_std": a.std(), "center_mean": c.mean(), "zero_share": float((a == 0).mean())}
-
-
 def load(runs, out_root, manifest_path, png_root):
     man = {r["image_id"]: r for r in TD.read_manifest(Path(manifest_path).parent)}
     scores, meta = {}, None
@@ -93,18 +63,9 @@ def load(runs, out_root, manifest_path, png_root):
         assert ids == meta[0], f"{run}: different image order"
         scores[run] = np.array([float(r["score"]) for r in rows])
     ids, y = meta
-    fac = {k: [] for k in ["age_months", "monochrome1", "log_orig_pixels", "img_mean", "img_std", "center_mean", "zero_share"]}
-    for i in ids:
-        m = man[i]
-        age = m.get("age_months", "")
-        fac["age_months"].append(float(age) if age not in ("", "None", "nan") else np.nan)
-        fac["monochrome1"].append(1.0 if str(m.get("photometric", "")).upper().endswith("1") else 0.0)
-        rr, cc = m.get("rows", ""), m.get("cols", "")
-        fac["log_orig_pixels"].append(np.log(float(rr) * float(cc)) if rr and cc else np.nan)
-        f = image_factors(png_root / m["split"] / f"{i}.png")
-        for k in ("img_mean", "img_std", "center_mean", "zero_share"):
-            fac[k].append(f[k])
-    return ids, y, scores, {k: np.array(v, dtype=float) for k, v in fac.items()}
+    X = B.factor_matrix([man[i] for i in ids], png_root)          # cùng cách tính với scripts/baseline_b0.py
+    fac = {k: X[:, j] for j, k in enumerate(B.FACTOR_NAMES)}
+    return ids, y, scores, fac
 
 
 def analyse(y, score, fac):
@@ -122,9 +83,7 @@ def analyse(y, score, fac):
     out["age_strata"] = strata
     out["single"] = {k: (auroc(y[np.isfinite(v)], v[np.isfinite(v)]) if np.isfinite(v).sum() > 10 else float("nan")) for k, v in fac.items()}
     out["spearman"] = {k: spearman(score, v) for k, v in fac.items()}
-    cols = list(fac)
-    X = np.c_[[np.where(np.isfinite(fac[k]), fac[k], np.nanmedian(fac[k]) if np.isfinite(fac[k]).any() else 0.0) for k in cols]].T
-    X = np.c_[X, (~np.isfinite(fac["age_months"])).astype(float)]            # missing-age indicator
+    X, = B.impute(np.c_[[fac[k] for k in B.FACTOR_NAMES]].T)        # trung vị + cột chỉ báo thiếu (b0.impute)
     out["factors_only_cv"] = logistic_cv_auroc(X, y)
     out["factors_plus_score_cv"] = logistic_cv_auroc(np.c_[X, score], y)
     return out

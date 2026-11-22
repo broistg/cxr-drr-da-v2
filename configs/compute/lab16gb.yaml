@@ -1,3 +1,4 @@
+# THAY THẾ bằng lab_a100.yaml (lab thực tế là A100 40 GB, đo 2026-11-19). Giữ làm hồ sơ cho GPU 16 GB nếu cần.
 # Máy phòng thí nghiệm: CHƯA ĐO. Có thể GPU 16 GB VRAM. Chạy scripts/probe_env.py rồi điền các ô null.
 name: lab16gb
 render:

@@ -1,0 +1,12 @@
+name: pleural_effusion
+status: draft
+description: "Tràn dịch màng phổi. Hạn chế đã biết (suy luận, chưa kiểm): CT nằm, X-quang đứng nên dịch phân bố khác."
+source: {ct: ctrate, mask: rex, mask_categories: ["2e"], one_volume_per_scan: true, split_by: patient}
+target:
+  dataset: vindr_pcxr
+  box_classes: ["Pleural effusion"]
+  positive: "hộp Pleural effusion (17 ảnh nhi: quá ít; thử trên người lớn trước)"
+  negative: "No finding"
+drr: {kind: plain, weights: [1.0, 1.0, 1.0]}
+label_rule: {min_mask_px: 25, T2: 0.0}
+view: [ap]
