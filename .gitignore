@@ -2,6 +2,12 @@
 data/
 outputs/
 cache/
+# Generated ReX metadata and manifests when --root points elsewhere in the repo.
+**/raw/rexgroundingct/
+**/raw/ct-rate/
+**/manifests/rex_*.json*
+**/manifests/ct_files.json*
+**/manifests/revisions.json*
 *.nii
 *.nii.gz
 *.dcm

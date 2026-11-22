@@ -1,0 +1,52 @@
+# ReX cohort and disease labels; CT-RATE is only the referenced volume source.
+# Export finding memberships only; do not infer or export negative labels.
+organization:
+  mode: findings_only
+  binary_labels: false
+  indexes: per_sign_and_split
+dataset:
+  rex_repo: rajpurkarlab/ReXGroundingCT
+  ct_repo: ibrahimhamamci/CT-RATE
+  pinned_sources: configs/rex_sources.json
+  metadata: dataset.json
+  full_reports: reports_dataset.json
+signs:
+  pneumothorax:
+    rex_category: 2g
+    missing_annotation_label: unknown
+  pleural_effusion:
+    rex_category: 2e
+    requires_finding_review: true  # 2e includes isolated pleural thickening
+    missing_annotation_label: unknown
+  atelectasis:
+    rex_category: 2b
+    missing_annotation_label: unknown
+  consolidation:
+    rex_category: 2b
+    missing_annotation_label: unknown
+  cardiomegaly:
+    rex_category: null
+    label_source: report_rule_weak
+    missing_annotation_label: unknown
+anatomy:
+  task: total
+  roi_subset:
+    - lung_upper_lobe_left
+    - lung_lower_lobe_left
+    - lung_upper_lobe_right
+    - lung_middle_lobe_right
+    - lung_lower_lobe_right
+    - heart
+  keep_pathology_masks_separate: true
+  crop_ct_to_anatomy: false
+split:
+  unit: patient
+  preserve_source_split_column: true
+  patient_overlap_policy: test_then_val_then_train
+  seed: 42
+render:
+  approach: anycxr_ct_and_labels_projection
+  implementation_status: pending_generator_implementation_and_validation
+  retain_full_ct_attenuation: true
+  project_anatomy_and_pathology_with_same_geometry: true
+  create_negatives_by_lesion_suppression: false
