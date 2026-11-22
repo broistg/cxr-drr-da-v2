@@ -33,7 +33,7 @@ python scripts/download_rex.py --root data/rex-drr --stage download
 python scripts/extract_rex_findings.py --root data/rex-drr --workers 4
 ```
 
-- `metadata` lấy hai JSON nguồn ReX và danh mục mask ở revision ghi trong `configs/rex_sources.json`. Có thể dùng `download_rex_metadata.ps1` rồi `index_rex_files.ps1 -Sources rex` làm phương án PowerShell cho bước này.
+- `metadata` lấy hai JSON nguồn ReX và danh mục mask ở revision ghi trong `configs/rex_sources.json`.
 - `plan_rex_masks.py` tạo `manifests/rex_mask_plan.json` cục bộ. Mỗi ca lưu split gốc, split thí nghiệm, finding đã chọn và ID kênh. Hai danh sách `review_findings` và `unavailable_masks` giữ các mục cần rà soát và các ca không có tệp mask công khai.
 - `--stage plan` tạo `manifests/rex_download_plan.json` và in dung lượng. Script tra đường dẫn đầy đủ `dataset/{train|valid}/{patient}/{scan}/{volume}.nii.gz` theo đúng số reconstruction ở revision CT-RATE đã khóa. Thư mục CT-RATE dựa trên tên volume gốc. Split `test` nội bộ vẫn có thể dùng volume nằm trong `dataset/valid/`. Nếu đường dẫn gốc thiếu, script báo `missing_ct` để rà soát trước khi tải.
 - `--stage download` đọc kế hoạch đã lưu, kiểm tra dung lượng và xác minh kích thước cùng SHA-256 từng tệp. Các tệp đã xác minh được dùng lại khi chạy tiếp. Dùng `--files masks` hoặc `--files ct` để tải từng nguồn. Dùng `--include-cardiomegaly` ở bước `plan` nếu muốn thêm CT của các ứng viên chỉ có báo cáo tim to.
