@@ -34,3 +34,15 @@ Quy tắc: không xoá mục cũ; kết luận bị bác bỏ thì thêm mục r
 - Lưu ý trung thực: đề xuất xuất hiện sau khi thấy số ca và B0 trên test chính thức; lý do là sức mạnh thống kê, không phải giá trị B0. Số của Trần và M8 không so với Giai đoạn 0 (ít nhãn dương hơn mỗi fold). Chia theo ảnh có thể rò rỉ nếu một bệnh nhân có nhiều ảnh (chưa kiểm).
 - Việc còn lại: nối `train_cls.py` với `crossfit.csv`; chạy `make_target_folds.py` rồi `baseline_b0.py --crossfit` trên dữ liệu thật.
 
+
+## D60. Nguồn ca âm và cách chia tập cho nguồn CT-RATE/ReX (ĐỀ XUẤT 2026-11-22, CẦN NHÓM QUYẾT ĐỊNH; chưa áp dụng)
+Bối cảnh: `docs/REX_DRR_DATASET_PLAN.md` chỉ xuất ca dương theo từng dấu hiệu ("không xuất nhãn âm"), vì nhãn ReX ở train không đầy đủ (thiếu mask không có nghĩa là âm). Nhưng M1 (và null B1, DA) cần ca âm, và `docs/PROTOCOL.md` mục 1–2 yêu cầu âm chặt, cùng phân phối nguồn với dương.
+**Quyết định cần nhóm (1): nguồn ca âm.**
+- A (đề xuất): CT-RATE volumes mà nhãn/báo cáo không có bất thường lồng ngực nào của danh sách theo dõi (âm chặt, kiểu "No finding"); dương và âm cùng từ CT-RATE nên cùng phân phối nguồn. Cần dùng nhãn/báo cáo CT-RATE để chọn ca âm; spec hiện tại có câu "không tự chuyển sang dùng nhãn CT-RATE cho phân loại", nên phải nhóm đồng ý bỏ hạn chế này riêng cho việc chọn âm. Tải thêm CT (dung lượng chưa đo).
+- B: ca ReX val/test không có finding của dấu hiệu (annotation đầy đủ ở val/test theo tài liệu), nhưng chỉ vài ca (tràn khí 0, tràn dịch 2, đông đặc 4): không đủ.
+- C: ca ReX train không có finding của dấu hiệu s: KHÔNG dùng (annotation từng phần có thể bỏ sót).
+- D: làm mờ/xoá tổn thương trên CT để tạo âm: bị loại (nhóm đã chốt; không chứng minh được CT trở thành âm tính).
+**Quyết định cần nhóm (2): chia tập.** Đề xuất theo `PROTOCOL.md` (4 fold CT theo bệnh nhân × 3 seed, `splits.make_folds` có tiền tố train/valid) trên tập gộp dương + âm; split chính thức của ReX (val/test nhỏ: tràn khí 0/0, tràn dịch 2/2, đông đặc 4/4) chỉ báo cáo kèm, không dùng làm split chính. Giữ quy tắc cách ly bệnh nhân của `isolate_holdout_patients` để một bệnh nhân không nằm ở hai fold. Tràn khí chỉ có 10 CT train: 4 fold sẽ có 2–3 ca dương mỗi fold, nên tràn khí chỉ nên coi là thử nghiệm mô tả cho tới khi có thêm CT (ví dụ nhãn mức CT từ báo cáo CT-RATE, cần đọc tay).
+**Việc đã làm cùng lúc (không cần quyết định):** `.gitignore` chặn `manifests/`, `indexes/`, `processed/`, `reports/`, `/env.json`; bỏ đường dẫn máy cá nhân khỏi `REX_DRR_DATASET_PLAN.md`; cảnh báo trong `CONTRIBUTING.md`.
+**Cần nhóm xử lý thủ công (mình không commit):** `env.json` ở thư mục gốc đang bị theo dõi bởi git: chạy `git rm --cached env.json` rồi commit. Repo công khai nên nội dung đã nằm trong lịch sử; nếu không muốn lộ đường dẫn máy lab thì chuyển repo sang private.
+**Quyết định cần nhóm (3), nhỏ:** `scripts/download_rex_masks.ps1`, `download_rex_metadata.ps1`, `index_rex_files.ps1` trùng chức năng với `scripts/download_rex.py`; giữ một đường (đề xuất giữ `download_rex.py`, xoá hoặc chuyển ba file `.ps1` vào `archive/`).

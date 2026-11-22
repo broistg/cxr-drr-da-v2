@@ -21,7 +21,7 @@
 4. Kết quả (REPORT, bảng) và diễn giải ghi vào `docs/DECISIONS.md` kèm đường dẫn nguồn. Kết luận bị dữ liệu bác bỏ thì **rút lại có ghi ngày**, không xoá.
 
 ## 5. Dữ liệu
-- Không commit dữ liệu/ảnh/khoá truy cập (kiểm tra `git diff --stat` trước khi push).
+- Không commit dữ liệu/ảnh/khoá truy cập (kiểm tra `git diff --stat` trước khi push). Cũng không commit file dẫn xuất chứa câu báo cáo CT-RATE (manifest, indexes) hay `env.json` của máy lab. Repo hiện công khai: coi mọi thứ đã commit là công khai, kể cả trong lịch sử git.
 - Dataset mới: thêm **data card** (`docs/data_cards/<tên>.md`: nguồn, giấy phép, truy cập, kích thước, nhãn, đã kiểm tra gì) và một dòng trong `docs/DATA_ACCESS.md`. Đọc điều khoản trước khi tải.
 - Không trộn nguồn khi huấn luyện. CT-RATE: chia theo bệnh nhân, mã `train_N` và `valid_N` có thể trùng số.
 

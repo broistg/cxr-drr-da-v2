@@ -39,7 +39,7 @@ python scripts/extract_rex_findings.py --root data/rex-drr --workers 4
 - `--stage download` đọc kế hoạch đã lưu, kiểm tra dung lượng và xác minh kích thước cùng SHA-256 từng tệp. Các tệp đã xác minh được dùng lại khi chạy tiếp. Dùng `--files masks` hoặc `--files ct` để tải từng nguồn. Dùng `--include-cardiomegaly` ở bước `plan` nếu muốn thêm CT của các ứng viên chỉ có báo cáo tim to.
 - Mask gốc nằm trong `raw/rexgroundingct/segmentations/` và CT nằm trong `raw/ct-rate/dataset/`. Sau khi trích, `processed/rex_findings/{train,val,test}` chứa NPZ với khóa `finding_<ID>` và metadata. Kiểm tra lưới không gian và affine của cặp CT/mask trước khi chiếu DRR.
 
-Chỉ commit cấu hình revision, script, kiểm thử và tài liệu. Giữ JSON nguồn, danh mục file, manifest từng ca, CT, mask và thông tin đăng nhập ở máy đã được cấp quyền.
+Chỉ commit cấu hình revision, script, kiểm thử và tài liệu. Các manifest, `indexes/` và báo cáo của bước `prepare_rex_cohort.py` chứa tên volume và câu báo cáo CT-RATE (không được phân phối lại): luôn để ngoài git (`.gitignore` đã chặn `manifests/`, `indexes/`, `processed/`, `reports/`). Giữ JSON nguồn, danh mục file, manifest từng ca, CT, mask và thông tin đăng nhập ở máy đã được cấp quyền.
 
 ## Mask cơ quan tối thiểu
 
@@ -78,7 +78,7 @@ Manifest DRR bổ sung `image_id, image_path, view, pose_id, seed, render_config
 
 ## Sinh DRR và kiểm tra chất lượng
 
-Repo AnyCXR tại `C:/Users/Dell/Desktop/AnyCXR` chưa có engine sinh DRR trong checkout. Người dùng yêu cầu bám luồng đầu của README, không cần cung cấp generator khác. Báo cáo `docs/research/AnyCXR_pipeline_paper_code_vi.md` trong AnyCXR cũng xác nhận phần CT → DRR còn thiếu. Vì vậy cần triển khai/kiểm chứng bước chiếu theo phương pháp này; không tuyên bố đang chạy generator chính thức của tác giả. Phạm vi hiện tại là chuẩn bị dữ liệu, TotalSegmentator và DRR/nhãn chiếu, chưa gồm CAR hoặc huấn luyện AnyCXR.
+Repo AnyCXR (bản checkout cục bộ của một thành viên) chưa có engine sinh DRR. Người dùng yêu cầu bám luồng đầu của README, không cần cung cấp generator khác. Báo cáo `docs/research/AnyCXR_pipeline_paper_code_vi.md` trong repo AnyCXR cũng xác nhận phần CT → DRR còn thiếu. Vì vậy cần triển khai/kiểm chứng bước chiếu theo phương pháp này; không tuyên bố đang chạy generator chính thức của tác giả. Phạm vi hiện tại là chuẩn bị dữ liệu, TotalSegmentator và DRR/nhãn chiếu, chưa gồm CAR hoặc huấn luyện AnyCXR.
 
 Repo hiện tại có `scripts/generate_drr.py` dùng DiffDRR và trọng số theo infection từ DRR4Covid. Chưa được xác nhận phù hợp cho các bệnh mới. Không chạy nguyên cấu hình “normal/positive” hiện có để tạo nhãn âm/dương cho tràn khí, tràn dịch hoặc tim to; làm nhạt tổn thương không chứng minh một CT đã trở thành âm tính.
 

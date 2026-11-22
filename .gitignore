@@ -8,6 +8,14 @@ cache/
 **/manifests/rex_*.json*
 **/manifests/ct_files.json*
 **/manifests/revisions.json*
+# Dẫn xuất từ dữ liệu có giấy phép (chứa tên volume, câu báo cáo CT-RATE, kết quả xác định bệnh nhân): không commit dù --root nằm trong repo.
+**/manifests/
+**/indexes/
+**/processed/
+**/reports/
+**/archive/obsolete_*
+# Thông tin máy (probe_env.py --out env.json ở thư mục gốc)
+/env.json
 *.nii
 *.nii.gz
 *.dcm
