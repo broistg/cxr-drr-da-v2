@@ -67,6 +67,7 @@ def main(argv=None):
     ap.add_argument("--keep-other-signs", action="store_true", help="giữ ca có dương của dấu hiệu khác trong tập âm")
     ap.add_argument("--match-root", type=Path, default=None, help="thư mục gốc dữ liệu (data/rex-drr): chọn ca âm GHÉP CẶP với ca dương theo tuổi, spacing, hãng máy từ metadata CT-RATE (neg-ratio phải là 1)")
     ap.add_argument("--age-caliper", type=float, default=None, help="khi ghép cặp: chênh lệch tuổi tối đa (năm); ca dương không ghép được sẽ không có ca âm")
+    ap.add_argument("--match-sex", action="store_true", help="khi ghép cặp: thêm giới vào khoảng cách (nhánh Rm đã tạo KHÔNG dùng giới)")
     ap.add_argument("--out", type=Path, default=None)
     a = ap.parse_args(argv)
     out = a.out or ROOT / f"data/processed/source_splits/{a.sign}_{a.arm}.yaml"
@@ -89,7 +90,7 @@ def main(argv=None):
             cm = {c: meta[c] for c in cand_c if c in meta}
             if len(pm) < len(pos_c):
                 sys.exit(f"thiếu metadata cho {len(pos_c) - len(pm)} ca dương")
-            m, unmatched = CB.match_negatives(pm, cm, a.seed, a.age_caliper)
+            m, unmatched = CB.match_negatives(pm, cm, a.seed, a.age_caliper, a.match_sex)
             return list(m.values()), {"ghép cặp": len(m), "dương không ghép được": len(unmatched), "ứng viên có metadata": len(cm)}
     pos, neg, info = select_cases(plan, rows, a.sign, a.neg_ratio, a.seed, not a.keep_other_signs, chooser)
     if not pos or not neg:

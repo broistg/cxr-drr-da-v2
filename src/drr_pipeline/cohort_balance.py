@@ -73,7 +73,7 @@ def shortcut_auroc(Xa: np.ndarray, Xb: np.ndarray, max_per_group: int = 2000, se
 
 
 def match_negatives(pos_meta: Dict[str, Dict[str, str]], cand_meta: Dict[str, Dict[str, str]], seed: int = 0,
-                    age_caliper: float | None = None) -> Tuple[Dict[str, str], List[str]]:
+                    age_caliper: float | None = None, use_sex: bool = False) -> Tuple[Dict[str, str], List[str]]:
     """Ghép 1:1 không hoàn lại: mỗi ca dương nhận ca âm gần nhất theo (tuổi, XY spacing, Z spacing, hãng máy khác nhau cộng 1), mỗi khoảng
     cách chuẩn hoá bằng độ lệch chuẩn của nhóm ứng viên. Tham lam theo thứ tự ngẫu nhiên có hạt giống. Chỉ dùng metadata kỹ thuật (không nhãn,
     không ảnh). Trả ({ca dương: ca âm}, [ca dương không ghép được trong age_caliper năm])."""
@@ -85,6 +85,8 @@ def match_negatives(pos_meta: Dict[str, Dict[str, str]], cand_meta: Dict[str, Di
 
     Fp, Mp = vec([pos_meta[c] for c in pos_ids])
     Fc, Mc = vec([cand_meta[c] for c in cand_ids])
+    sex = lambda rows: np.array([1.0 if str(r.get("PatientSex", "")).strip().upper() == "F" else (0.0 if str(r.get("PatientSex", "")).strip().upper() == "M" else -1.0) for r in rows])
+    Sp, Sc = sex([pos_meta[c] for c in pos_ids]), sex([cand_meta[c] for c in cand_ids])
     med = np.nanmedian(Fc, axis=0)
     Fp, Fc = np.where(np.isfinite(Fp), Fp, med), np.where(np.isfinite(Fc), Fc, med)
     sd = Fc.std(axis=0)
@@ -93,6 +95,8 @@ def match_negatives(pos_meta: Dict[str, Dict[str, str]], cand_meta: Dict[str, Di
     out, unmatched = {}, []
     for i in np.random.default_rng(seed).permutation(len(pos_ids)):
         d = (np.abs(Fc - Fp[i]) / sd).sum(axis=1) + np.array([m != Mp[i] for m in Mc], dtype=float)
+        if use_sex:
+            d = d + (Sc != Sp[i]).astype(float)
         d = np.where(free, d, np.inf)
         if age_caliper is not None:
             d = np.where(np.abs(Fc[:, 0] - Fp[i, 0]) <= age_caliper, d, np.inf)

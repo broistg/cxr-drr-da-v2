@@ -48,12 +48,15 @@ Mô hình học từ DRR có chuyển giao sang X-quang thật tốt hơn khi ca
 - **Chưa kiểm:** cách chọn "bình thường" từ nhãn/báo cáo CT-RATE; DRR cho CT bình thường (phổi không tổn thương, không mask ReX) chạy cùng đường ống chưa thử.
 - Thiếu nhãn người đọc cho đích: một bác sĩ đọc mỗi ảnh (VinDr-PCXR), không phải chuẩn vàng.
 
-## 7. Điều kiện trước khi chạy (cần nhóm)
-1. Nhóm đồng ý dùng nhãn/báo cáo CT-RATE **chỉ để chọn ca bình thường** cho nhánh N (hiện spec dữ liệu ghi "không tự chuyển sang dùng nhãn CT-RATE cho phân loại"), và chốt định nghĩa "bình thường chặt" (ví dụ: mọi nhãn bất thường lồng ngực trong danh sách theo dõi bằng 0, danh sách do nhóm chọn; không tự suy từ nhớ).
-2. Nối `train_cls.py` với cross-fit đích và danh sách ca âm theo nhánh.
-3. Kiểm DRR chạy được trên ca CT-RATE bình thường (không có mask ReX) bằng cùng đường ống.
-4. Ước lượng dung lượng tải nhánh N (chưa đo).
-5. Người duyệt ghi tên và ngày.
+## 7. Điều kiện trước khi chạy (cập nhật 2026-11-22)
+1. **Định nghĩa "bình thường" cho nhánh N: đã duyệt bởi Lê Tiến Đạt, 2026-11-22 (cá nhân; nhóm và cố vấn chưa xác nhận).** Một CT-RATE được tính bình thường khi: (a) 12 nhãn liên quan X-quang đều bằng 0 (loại khỏi danh sách theo dõi: vật liệu y tế, vôi hoá thành động mạch, vôi hoá thành động mạch vành, thoát vị hoành, hạch, tràn dịch màng ngoài tim); (b) báo cáo không nhắc dấu hiệu đang xét theo cách khẳng định hoặc không chắc chắn; (c) không cùng bệnh nhân với ca dương; (d) ghép cặp 1:1 với ca dương theo tuổi, XY/Z spacing, hãng máy (và giới, xem dưới). Nhãn và báo cáo CT-RATE chỉ dùng để chọn ca, không dùng cho huấn luyện hay đánh giá. Nhóm `strict` (cả 18 nhãn = 0) chỉ để so sánh.
+2. **Luật khả thi (đăng ký trước, đề xuất; Đạt đã duyệt định nghĩa nhưng chưa xác nhận riêng các ngưỡng):** nhánh N chạy khi ≥ 80% ca dương ghép được (caliper tuổi 5 năm), AUROC lối tắt sau ghép < 0,55 và |SMD| từng đặc trưng < 0,1. Không đạt thì huỷ và ghi, không nới.
+   - Kết quả đo (2026-11-22, ghép chưa dùng giới): `relevant` ghép được 99% (521/522 và 153/154), AUROC lối tắt 0,498 và 0,477, mọi |SMD| < 0,1 trừ giới (−0,12 và −0,16). `strict` ghép được 95%, AUROC 0,531 và 0,517, |SMD| > 0,1 ở tuổi, XY spacing, số lát, giới. Theo luật nguyên văn, N chưa đạt chỉ vì giới (và chỉ `relevant` có khả năng đạt). Phương án: ghép thêm giới (`--match-sex`) rồi đo lại; đây là đổi PHƯƠNG PHÁP ghép, không đổi ngưỡng.
+3. Nối `train_cls.py` với cross-fit đích và danh sách ca âm theo nhánh: xong (chưa chạy GPU).
+4. Kiểm DRR chạy được trên ca âm không có mask: xong cho ca R (`train_10000_a_1`), chưa làm cho ca CT-RATE bình thường chọn bằng quy trình này (cùng đường ống, kỳ vọng chạy được).
+5. Dung lượng tải: nhánh Rm đo được 248,03 GB cho 1.454 volume (cả hai dấu hiệu); nhánh N chưa đo (~90 GB mỗi dấu hiệu nếu ~170 MB mỗi CT).
+6. Kiểm bộ lọc báo cáo bằng gán nhãn tay (2026-11-23): nhóm giữ nhiễm 1/100 cho mỗi dấu hiệu (ngưỡng ≤ 5% đạt), kappa 0,905 và 1,000; xem D61/DECISIONS. Người đọc là thành viên nhóm, không phải bác sĩ.
+7. Chưa có: tên người duyệt thứ hai (nhóm/cố vấn), xác nhận của bác sĩ hoặc cố vấn cho mẫu bình thường (đọc ảnh, không chỉ văn bản).
 
 ## 8. Kết quả (điền sau khi chạy)
 - Suite/REPORT: ___  Số run: ___  Ngày chạy: ___

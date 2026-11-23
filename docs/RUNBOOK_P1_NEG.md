@@ -119,3 +119,89 @@ python scripts/cohort_balance.py --root data/rex-drr --splits data/processed/sou
 python scripts/cohort_balance.py --root data/rex-drr --splits data/processed/source_splits/pleural_effusion_Rm.yaml --match-n --age-caliper 5
 ```
 Ghi `outputs/cohort_balance/<yaml>_matchN.md` (thêm hai hàng "N-... ghép" và số ca dương không ghép được).
+
+### Nhánh N: chọn ca và ghép cặp có giới (định nghĩa đã duyệt, 2026-11-22)
+Kết quả `--match-n`: `relevant` ghép được 99%, AUROC lối tắt 0,498 (consolidation), 0,477 (effusion); còn lệch giới (SMD −0,12 và −0,16). Đo lại với giới trong khoảng cách ghép:
+```
+python scripts/cohort_balance.py --root data/rex-drr --splits data/processed/source_splits/consolidation_Rm.yaml --match-n --match-sex --age-caliper 5
+python scripts/cohort_balance.py --root data/rex-drr --splits data/processed/source_splits/pleural_effusion_Rm.yaml --match-n --match-sex --age-caliper 5
+```
+Nếu đạt (|SMD| < 0,1, AUROC < 0,55), chọn ca N theo định nghĩa đã duyệt:
+```
+python scripts/fetch_ctrate_metadata.py --root data/rex-drr --reports --list-only
+python scripts/fetch_ctrate_metadata.py --root data/rex-drr --reports
+python scripts/select_ctrate_normals.py --root data/rex-drr --sign consolidation
+python scripts/make_source_folds.py --sign consolidation --arm N --mask-plan data/rex-drr/manifests/rex_mask_plan.json --negatives data/rex-drr/indexes/consolidation_N/negatives.csv --match-root data/rex-drr --match-sex --age-caliper 5
+```
+(tương tự pleural_effusion). Gửi các dòng đếm in ra và `outputs/negatives/normals_<sign>.md` (chỉ số liệu). Báo cáo chỉ dùng để lọc, không ghi ra tệp. Tên đường dẫn thư mục báo cáo là hiểu biết của mình, chưa kiểm: nếu `--list-only` không thấy CSV, gửi lại thông báo.
+
+### Kết quả chọn ca N lần 1 (2026-11-23) và luật báo cáo mới
+Ghép cặp có giới đạt cho `N-relevant` (|SMD| lớn nhất 0,04 consolidation và 0,07 effusion; AUROC lối tắt 0,475 và 0,412; ghép được 99%); `N-strict` vẫn lệch (tuổi +0,12/+0,14, XY +0,18, giới −0,13) nên bỏ khỏi so sánh.
+Lọc báo cáo lần 1 (luật cũ giống nhánh R): effusion loại 5.840/6.924 (84%), giữ 1.084; consolidation loại 409, giữ 6.515. Con số 84% là dấu hiệu luật quá chặt cho văn phong báo cáo CT-RATE (câu phủ định thường có dấu phẩy, ví dụ "No pleural effusion was detected ..., and ..."), không phải 84% ca có tràn dịch (nhãn đã = 0). Luật mới `report_status_ctrate` xét theo mệnh đề, nhận phủ định "No A, B or C", "was not observed", v.v.; vẫn bảo thủ. Chạy lại (ghi đè chỉ tệp chỉ mục, chưa có yaml N) kèm câu mẫu bị loại để kiểm bằng mắt:
+```
+python scripts/select_ctrate_normals.py --root data/rex-drr --sign pleural_effusion --examples 25
+python scripts/select_ctrate_normals.py --root data/rex-drr --sign consolidation --examples 25
+```
+Dán lại các dòng "mẫu loại" (câu có thuật ngữ, không kèm mã ca) nếu thấy phần lớn là câu phủ định bị loại nhầm. Sau đó mới chạy make_source_folds.py --arm N rồi cohort_balance.py --splits ..._N.yaml.
+
+### Luật báo cáo lần 2 (2026-11-23) sau khi xem câu mẫu bị loại
+Luật lần 1 (`report_status_ctrate`) cho effusion loại 225/6.924 (còn 6.699), consolidation loại 39 (còn 6.885). Câu mẫu cho thấy hai lỗi: (1) effusion: gần như toàn "pericardial effusion" (tràn dịch màng ngoài tim, không phải dấu hiệu này) vì thuật ngữ khớp cả "effusion" trần; (2) consolidation và effusion: danh sách phủ định có dấu phẩy ("there is no active infiltration, consolidation or ...", "... lesions are not detected", "No pericardial, pleural effusion or thickening was detected") bị coi là khẳng định. Một nửa mẫu consolidation là khẳng định thật ("widespread consolidation areas are observed", "... is stable") nên đúng khi loại.
+Luật lần 2: bỏ qua mệnh đề nhắc "pericardi..." mà không có "pleur..." (chỉ cho pleural_effusion); danh sách "no A, B or C" và "A or B ... is not detected" được coi là phủ định, trừ khi vị ngữ khẳng định nằm ngay sau thuật ngữ; từ chen giữa là động từ hoặc từ chỉ vị trí cụ thể (lobe, lung, within, at...) thì không coi là danh sách. Vẫn bảo thủ. 163 test đạt, nhưng chỉ kiểm trên câu mẫu của chính các lỗi đã thấy, nên bước kiểm bằng mắt lại là bắt buộc:
+```
+python scripts/select_ctrate_normals.py --root data/rex-drr --sign pleural_effusion --examples 25
+python scripts/select_ctrate_normals.py --root data/rex-drr --sign consolidation --examples 25
+```
+Mỗi báo cáo hiện 2 lần trong mẫu (vì Findings và Impression đều chứa câu) nên 25 dòng chỉ khoảng 12 báo cáo. Gần như chắc chắn số ca loại sẽ giảm. Đáng quan tâm hơn: có mẫu nào đang bị loại nhầm hoặc (quan trọng hơn) có câu khẳng định thật nào KHÔNG bị loại. Cách bắt loại sót: thêm `--examples` chỉ in được câu bị loại; để xem câu được giữ, cần gán nhãn tay một mẫu ngẫu nhiên (bước ước lượng tỉ lệ nhiễm bệnh của nhóm N).
+
+### Luật báo cáo lần 3 (2026-11-23)
+Kết quả lần 2: effusion loại 20, giữ 6.904; consolidation loại 20, giữ 6.904 (trùng số do tình cờ). Câu mẫu: (1) công cụ in SAI câu: `--examples` in câu ĐẦU TIÊN chứa thuật ngữ, không phải câu làm báo cáo bị loại, nên các mẫu "Pericardial effusion is present/was not detected" không chứng minh luật sai; đã sửa để in đúng mệnh đề gây loại (`affirmed_clause`); (2) lỗi thật: danh sách phủ định mà thuật ngữ đứng CUỐI, có or/and chen trước và theo sau là "is/were detected" ("no nodule, space-occupying lesion, active infiltration or consolidation is detected", "no ... pneumothorax or pleural effusion were detected at other levels", "No active infiltrative, space-occupying lesion with consolidation was detected") bị coi là khẳng định. Luật lần 3: có or/and/nor giữa từ phủ định và thuật ngữ thì luôn là danh sách; vị ngữ khẳng định chỉ gồm seen/observed/present/noted/evident (không gồm detected/identified/found, thường kết thúc câu phủ định); "with" tính là từ chỉ vị trí/đi kèm, không phải động từ.
+Các mẫu còn lại là khẳng định thật hoặc tiền sử (đúng khi loại): "widespread consolidation areas are observed", "... consolidation area ... is stable", "... regressed/disappeared in the previous examination" (bệnh sử có tổn thương, loại là bảo thủ).
+Chạy lại (câu mẫu giờ là câu thật sự gây loại):
+```
+python scripts/select_ctrate_normals.py --root data/rex-drr --sign pleural_effusion --examples 25
+python scripts/select_ctrate_normals.py --root data/rex-drr --sign consolidation --examples 25
+```
+
+### Kết quả luật báo cáo lần 3 và gán nhãn tay (2026-11-23)
+Lần 3: effusion loại 18 (giữ 6.906), consolidation loại 14 (giữ 6.910); luật cũ loại 5.840 và 409. Mọi câu mẫu đều là khẳng định thật hoặc tiền sử ("... observed in the previous examination was not detected in the current examination" loại là bảo thủ), một ca là tràn dịch tai giữa (loại nhầm, 1 ca, không đáng kể).
+Bước kế: đo độ nhiễm của nhóm được GIỮ bằng gán nhãn tay (bộ lọc chỉ đo được phía loại nhầm qua `--examples`; phía bỏ sót chỉ đo được bằng người đọc).
+```
+python scripts/sample_for_review.py --root data/rex-drr --sign consolidation --n-kept 100 --n-excluded 14
+python scripts/sample_for_review.py --root data/rex-drr --sign pleural_effusion --n-kept 100 --n-excluded 18
+```
+Ghi `outputs/review/<sign>_review.csv` (đưa cho người đọc, điền cột sign_present = yes/no/uncertain; văn bản báo cáo CT-RATE: chỉ dùng cục bộ, không commit, không gửi cho bên thứ ba, không dán cho mình) và `<sign>_key.csv` (giữ lại, không đưa người đọc). Nên có người đọc thứ hai cho ít nhất 50 mục để tính kappa. Sau khi điền:
+```
+python scripts/score_review.py --key outputs/review/consolidation_key.csv --labels outputs/review/consolidation_review.csv [--labels2 bản_hai.csv]
+```
+Chỉ gửi mình các dòng số tổng hợp in ra. Đề xuất ngưỡng (chờ nhóm xác nhận, đăng ký trước khi xem số): nhóm giữ chấp nhận nếu tỉ lệ có/nghi ngờ ≤ 5% (với n = 100, 0/100 cho cận trên Wilson ≈ 3,7%; 3/100 cho cận trên ≈ 8,5%). Nếu vượt, sửa luật hoặc dùng LLM cục bộ làm lớp kiểm thứ hai rồi lấy mẫu mới (mẫu cũ đã dùng để sửa không còn độc lập; đổi hạt giống `--seed`).
+Giới hạn: gán nhãn tay trên văn bản chỉ phát hiện các lỗi của luật. Nếu báo cáo bỏ sót dấu hiệu mà CT có, chỉ xem ảnh mới biết.
+
+### Chấm hai người đọc (2026-11-23)
+`score_review.py` đọc cột 1 (item_id) và cột 3 (nhãn) nên cột notes, có hay không có ngoặc kép, không ảnh hưởng. Đã thêm: tự nhận dấu phân cách `,` `;` tab (Excel theo vùng có thể lưu `;`), bỏ BOM UTF-8, báo các giá trị nhãn lạ (không in văn bản báo cáo), và in thêm "HỢP" (ít nhất một người nói có/nghi ngờ) cùng kappa.
+```
+python scripts/score_review.py --key outputs/review/consolidation_key.csv --labels <người1>.csv --labels2 <người2>.csv
+python scripts/score_review.py --key outputs/review/pleural_effusion_key.csv --labels <người1>.csv --labels2 <người2>.csv
+```
+Chạy lại đổi chỗ hai tệp để xem riêng từng người (dòng đầu là của --labels).
+
+### Lỗi mã mục bị Excel bỏ số 0 (2026-11-23)
+Lần chấm đầu chỉ khớp 8 và 11 mục trên 107 và 110: Excel đổi mã "001" thành "1" nên chỉ các mã ≥ 100 khớp với tệp key. `score_review.py` nay chuẩn hoá mã về 3 chữ số. Kết quả lần đó (n = 8 và 11, 0 ca nhiễm) KHÔNG dùng được. Khi mở tệp trong Excel nên đặt cột item_id kiểu Text.
+
+### Kết quả gán nhãn tay (2026-11-23) và bước kế
+Nhóm giữ nhiễm 1/100 (consolidation và effusion), kappa 0,905 và 1,000: bộ lọc đạt ngưỡng đăng ký trước. Chạy ghép cặp nhánh N cho cả hai dấu hiệu rồi kiểm cân bằng và dung lượng:
+```
+python scripts/make_source_folds.py --sign consolidation --arm N --mask-plan data/rex-drr/manifests/rex_mask_plan.json --negatives data/rex-drr/indexes/consolidation_N/negatives.csv --match-root data/rex-drr --match-sex --age-caliper 5
+python scripts/make_source_folds.py --sign pleural_effusion --arm N --mask-plan data/rex-drr/manifests/rex_mask_plan.json --negatives data/rex-drr/indexes/pleural_effusion_N/negatives.csv --match-root data/rex-drr --match-sex --age-caliper 5
+python scripts/cohort_balance.py --root data/rex-drr --splits data/processed/source_splits/consolidation_N.yaml
+python scripts/cohort_balance.py --root data/rex-drr --splits data/processed/source_splits/pleural_effusion_N.yaml
+python scripts/download_rex.py --root data/rex-drr --stage plan --extra-ct-list data/processed/source_splits/consolidation_Rm_negatives.csv data/processed/source_splits/pleural_effusion_Rm_negatives.csv data/processed/source_splits/consolidation_N_negatives.csv data/processed/source_splits/pleural_effusion_N_negatives.csv
+```
+Gửi: dòng ghi yaml (số dương/âm, số ca không ghép được), hai bảng `cohort_balance` (nhóm "R-neg" trong báo cáo này là ca âm nhánh N), dòng "Plan ready".
+
+### Kết quả ghép cặp nhánh N và dung lượng (2026-11-23)
+Ghép cặp N (định nghĩa đã duyệt, lọc báo cáo lần 3, caliper tuổi 5 năm, có giới): consolidation 522 dương, 521 âm (1 dương không ghép được); effusion 154 dương, 153 âm. Cân bằng: |SMD| lớn nhất 0,05 (consolidation) và 0,09 (effusion, hãng SIEMENS +0,09, sát ngưỡng 0,1); AUROC lối tắt 0,439 và 0,410. Luật đăng ký trước (ghép ≥ 80%, AUROC < 0,55, |SMD| < 0,1) đạt cho cả hai. AUROC dưới 0,5 rõ rệt là hiệu ứng của ghép 1:1 khi kiểm chéo (đối của ca dương đang nằm trong tập huấn luyện), không phải tín hiệu khai thác được; Rm cũng cho 0,44 và 0,486.
+Dung lượng: kế hoạch hai nhánh Rm và N là 2.027 volume, 349,11 GB CT, 1,37 GB mask (~172 MB mỗi CT). Mới chỉ tính CT thô. Mỗi ca còn cần bản CT int16 và labelmap ghi lại bởi `prepare_ctrate_case.py` cho từng dấu hiệu (chưa đo kích thước; có thể thêm vài chục đến vài trăm GB), cộng cache DRR. Trước khi tải: kiểm chỗ trống ổ đĩa lab hiện tại (937 GiB là số đo 2026-11-19), điều kiện dừng của spec là dung lượng nhánh N vượt chỗ trống trừ 20%.
+`download_rex.py` có thêm `--signs` để bỏ CT chỉ có xẹp phổi, tràn khí (không dùng trong Phase 1), thường tiết kiệm khoảng 10% và không đổi các ca âm:
+```
+python scripts/download_rex.py --root data/rex-drr --stage plan --signs consolidation pleural_effusion --extra-ct-list data/processed/source_splits/consolidation_Rm_negatives.csv data/processed/source_splits/pleural_effusion_Rm_negatives.csv data/processed/source_splits/consolidation_N_negatives.csv data/processed/source_splits/pleural_effusion_N_negatives.csv
+```

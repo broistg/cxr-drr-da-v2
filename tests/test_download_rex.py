@@ -131,3 +131,14 @@ def test_extra_ct_list_adds_ct_only_jobs():
     byname = {j["volume_name"]: j for j in plan["jobs"]}
     assert byname["train_900_a_1.nii.gz"]["mask"] is None and byname["train_900_a_1.nii.gz"]["channels"] == []
     assert byname[existing]["mask"] is not None and "train_900_a_1.nii.gz" in plan["extra_ct"]
+
+
+def test_signs_filter_drops_other_sign_jobs():
+    fx = fixtures()
+    other = {**fx["jobs"][0], "volume_name": "train_901_a_1.nii.gz", "path": "segmentations/train_901_a_1.nii.gz",
+             "patient_id": "train_901", "channels": [{"sign": "atelectasis", "finding_id": 0}]}
+    fx["jobs"].append(other)
+    cts = {original_ct_path(j["volume_name"]): file_info(original_ct_path(j["volume_name"]), CT_DATA) for j in fx["jobs"]}
+    both = build_download_plan(fx, SOURCES, FakeHub(cts))
+    only = build_download_plan(fx, SOURCES, FakeHub(cts), signs=["consolidation", "pleural_effusion"])
+    assert len(both["jobs"]) == 2 and [j["volume_name"] for j in only["jobs"]] == [fx["jobs"][0]["volume_name"]]

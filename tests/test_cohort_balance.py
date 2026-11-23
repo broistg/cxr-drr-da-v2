@@ -44,3 +44,13 @@ class MatchTests(unittest.TestCase):
         cand = {"c": rows(1, 30, "Philips", 1)[0]}
         m, un = CB.match_negatives(pos, cand, age_caliper=5)
         self.assertEqual((m, un), ({}, ["p"]))
+
+
+class SexMatchTests(unittest.TestCase):
+    def test_sex_term(self):
+        def r(sex):
+            return {"PatientAge": "050Y", "PatientSex": sex, "Manufacturer": "A", "XYSpacing": "[0.6, 0.6]", "ZSpacing": "1"}
+        pos = {"p1": r("F"), "p2": r("M")}
+        cand = {"cM": r("M"), "cF": r("F")}
+        m, _ = CB.match_negatives(pos, cand, use_sex=True)
+        self.assertEqual(m, {"p1": "cF", "p2": "cM"})

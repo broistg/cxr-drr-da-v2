@@ -25,6 +25,7 @@ def main():
     ap.add_argument("--splits", type=Path, required=True)
     ap.add_argument("--match-n", action="store_true", help="thêm hai nhóm N-strict/N-relevant GHÉP CẶP 1:1 với ca dương (như Rm) để xem nhánh N có cân bằng được không")
     ap.add_argument("--age-caliper", type=float, default=None, help="với --match-n: chênh tuổi tối đa (năm); ca dương không ghép được sẽ được đếm")
+    ap.add_argument("--match-sex", action="store_true", help="với --match-n: ghép cả giới")
     ap.add_argument("--out-dir", type=Path, default=Path("outputs/cohort_balance"))
     a = ap.parse_args()
     roles = yaml.safe_load(a.splits.read_text(encoding="utf8"))["roles"]
@@ -48,7 +49,7 @@ def main():
         pm = {c: meta[c] for c in pos_cases if c in meta}
         for tier in ("strict", "relevant"):
             cm = {key(n): meta[key(n)] for n in pool(tier) if key(n) in meta}
-            m, un = CB.match_negatives(pm, cm, 0, a.age_caliper)
+            m, un = CB.match_negatives(pm, cm, 0, a.age_caliper, a.match_sex)
             groups[f"N-{tier} ghép"] = [cm[v] for v in m.values()]
             note.append(f"N-{tier} ghép cặp: {len(m)} ghép được, {len(un)} ca dương không ghép được (caliper tuổi {a.age_caliper})")
     groups = {k: v for k, v in groups.items() if v}
@@ -69,7 +70,7 @@ def main():
     text = "\n".join(out)
     print(text)
     a.out_dir.mkdir(parents=True, exist_ok=True)
-    (a.out_dir / f"{a.splits.stem}{'_matchN' if a.match_n else ''}.md").write_text(text + "\n", encoding="utf8")
+    (a.out_dir / f"{a.splits.stem}{('_matchN' + ('_sex' if a.match_sex else '')) if a.match_n else ''}.md").write_text(text + "\n", encoding="utf8")
 
 
 if __name__ == "__main__":

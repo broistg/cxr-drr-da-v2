@@ -69,7 +69,7 @@ def matching_ct_files(api, sources, paths):
     return entries
 
 
-def build_download_plan(mask_plan, sources, api, include_cardiomegaly=False, extra_ct=None):
+def build_download_plan(mask_plan, sources, api, include_cardiomegaly=False, extra_ct=None, signs=None):
     if (mask_plan["repo"], mask_plan["revision"]) != (sources["rex_repo"], sources["rex_revision"]):
         raise ValueError("The mask manifest must use the pinned ReX repository and revision")
 
@@ -77,6 +77,8 @@ def build_download_plan(mask_plan, sources, api, include_cardiomegaly=False, ext
     jobs = {}
     for row in mask_plan["jobs"]:
         name = row["volume_name"]
+        if signs is not None and not ({c["sign"] for c in row["channels"]} & set(signs)):
+            continue        # --signs: chỉ lấy CT có finding của các dấu hiệu này (bỏ CT chỉ có xẹp phổi, tràn khí... nếu không dùng)
         if name in jobs or row["path"] != f"segmentations/{name}":
             raise ValueError(f"Duplicate volume or unexpected ReX mask path: {name}")
         jobs[name] = {"volume_name": name, "patient_id": row["patient_id"], "split": row["split"],
@@ -161,6 +163,7 @@ def main():
     parser.add_argument("--stage", required=True, choices=("metadata", "plan", "download"))
     parser.add_argument("--mask-plan", type=Path, help="Override the local mask manifest for the plan stage")
     parser.add_argument("--include-cardiomegaly", action="store_true", help="Include CT for report-only candidates in the plan")
+    parser.add_argument("--signs", nargs="+", metavar="SIGN", help="chỉ tải mask/CT của ca có finding thuộc các dấu hiệu này (ví dụ consolidation pleural_effusion); mặc định: mọi dấu hiệu trong kế hoạch mask")
     parser.add_argument("--extra-ct-list", type=Path, nargs="+", help="một hoặc nhiều CSV (volume_name,patient_id,source_split,split) của CT cần tải mà không có mask, ví dụ ca âm từ make_source_folds.py; ca trùng chỉ tính một lần")
     parser.add_argument("--files", choices=("both", "masks", "ct"), default="both")
     parser.add_argument("--only", nargs="+", metavar="VOLUME", help="Chỉ tải các volume này (tên có hoặc không có .nii.gz); phải nằm trong kế hoạch")
@@ -190,7 +193,7 @@ def main():
                         for row in csv.DictReader(f):
                             extra.setdefault(row["volume_name"], row)
                 extra = list(extra.values())
-            plan = build_download_plan(masks, sources, HfApi(), args.include_cardiomegaly, extra)
+            plan = build_download_plan(masks, sources, HfApi(), args.include_cardiomegaly, extra, args.signs)
             write_json(target, plan)
             ct_bytes = sum(job["ct"]["size"] for job in plan["jobs"] if job["ct"])
             mask_bytes = sum(job["mask"]["size"] for job in plan["jobs"] if job["mask"])
