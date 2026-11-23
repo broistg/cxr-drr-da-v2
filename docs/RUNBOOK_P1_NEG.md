@@ -205,3 +205,20 @@ Dung lượng: kế hoạch hai nhánh Rm và N là 2.027 volume, 349,11 GB CT, 
 ```
 python scripts/download_rex.py --root data/rex-drr --stage plan --signs consolidation pleural_effusion --extra-ct-list data/processed/source_splits/consolidation_Rm_negatives.csv data/processed/source_splits/pleural_effusion_Rm_negatives.csv data/processed/source_splits/consolidation_N_negatives.csv data/processed/source_splits/pleural_effusion_N_negatives.csv
 ```
+
+### Lỗi trên máy lab (2026-11-23): HF_TOKEN sai và đường dẫn ".."
+- `HF_TOKEN` đặt sẵn trong môi trường lab nhưng không hợp lệ, ưu tiên hơn `hf auth login` nên mọi lệnh tải trả 401. Cách xử lý: `unset HF_TOKEN`, `export HF_ENDPOINT=https://huggingface.co`, `hf auth login` bằng token cá nhân. KHÔNG dùng `echo $HF_TOKEN` (in bí mật); dùng `printenv | grep -i '^HF_' | cut -d= -f1`.
+- `generate_drr.py` báo "not found under .../data/raw/../processed/oriented/consolidation/ct": trên Linux đường dẫn có `data/raw/..` không phân giải nếu thư mục `data/raw` không tồn tại (máy lab chưa có `data/raw`; Windows gộp ".." theo chữ nên không lỗi). Sửa: `config.py` nay gộp ".." bằng `os.path.normpath`; tạm thời có thể `mkdir -p data/raw`.
+- Số đo thí điểm 2 ca (lab): tải 3 tệp 22 s (≈ 18 MB/s nếu hai CT khoảng 0,4 GB; chưa đo kích thước chính xác), chuẩn hoá 12,8 s và 9,5 s mỗi ca (chủ yếu CPU, một luồng). Ngoại suy thô cho 1.789 ca: tải ≈ 5 giờ, chuẩn hoá ≈ 5,5 giờ nếu một luồng.
+
+## Chạy đường ống theo lô (run_rex_stream.py)
+
+Số đo trên A100 lab (2026-11-23, torch cu126): 40 pose/ca = 7 s (≈0,18 s/pose, nhanh hơn ước tính 1,1 s/pose của cấu hình ~6 lần); CT thô 113 MB, CT chuẩn hóa 76–88 MB, nhãn ~0,3 MB, cache 12 MB/ca/profile/view.
+Ước tính: 1.789 ca x 7 s ≈ 3,5 h DRR (1 profile, 1 view); tải CT là điểm nghẽn (≈ 7 s/file một luồng).
+
+```
+python scripts/run_rex_stream.py --root data/rex-drr --sources consolidation_Rm pleural_effusion_Rm --dry-run
+python scripts/run_rex_stream.py --root data/rex-drr --sources consolidation_Rm pleural_effusion_Rm --limit 8 --keep-oriented
+python scripts/run_rex_stream.py --root data/rex-drr --sources consolidation_Rm pleural_effusion_Rm
+```
+Chạy lại an toàn (bỏ qua ca đã có cache); ca lỗi ghi vào `data/processed/drr/failed.txt`, CT thô của ca đó được giữ.
