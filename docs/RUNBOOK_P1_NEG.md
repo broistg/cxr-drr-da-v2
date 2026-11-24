@@ -222,3 +222,15 @@ python scripts/run_rex_stream.py --root data/rex-drr --sources consolidation_Rm 
 python scripts/run_rex_stream.py --root data/rex-drr --sources consolidation_Rm pleural_effusion_Rm
 ```
 Chạy lại an toàn (bỏ qua ca đã có cache); ca lỗi ghi vào `data/processed/drr/failed.txt`, CT thô của ca đó được giữ.
+
+## Đích NIH ChestX-ray14 nhi (D62)
+
+Các lệnh dưới chạy trên CPU, không cần ảnh trừ bước cuối. Cần `Data_Entry_2017.csv` (và tuỳ chọn `BBox_List_2017.csv`) từ trang NIH/Kaggle.
+```
+python scripts/eda_nih_age.py --csv <...>/Data_Entry_2017.csv               # outputs/eda/nih_age_labels.md
+python scripts/prep_nih_peds.py --csv <...>/Data_Entry_2017.csv [--bbox <...>/BBox_List_2017.csv]
+python scripts/nih_shortcut_check.py                                          # outputs/eda/nih_shortcut.md
+python scripts/fetch_nih_images.py --n 6                                      # tải thử; --all --workers 4 để tải đủ
+```
+Kết quả đo ngày 2026-11-23: 5.241 ảnh, 1.600 bệnh nhân dưới 18 tuổi; dương (ảnh/bệnh nhân): tràn khí 314/55, tràn dịch 453/139, đông đặc 278/115; âm No Finding 3.049/1.345; 5 fold theo bệnh nhân (không bệnh nhân nào ở hai fold, kiểm 2000 bn đầu); PA 2.671, AP 2.570. AUROC chỉ từ metadata (tuổi+giới+tư thế): 0,600 / 0,659 / 0,672; AP trong ca dương 56,1% / 69,3% / 79,1% so với 39,5% ca âm.
+Tải thử 6 ảnh thành công (PNG 1024x1024, 8 bit); `fetch_nih_images.py` chuyển ảnh ra `data/raw/nih/images/` và dọn thư mục `images_00N/images` rỗng. Thư mục `images_00N` còn sót từ lần chạy trước có thể xóa tay.

@@ -45,6 +45,8 @@ Luồng: **CT → DRR (cache) → huấn luyện → đánh giá → kiểm tra/
 | Kiểm tra | `diagnose` (mã ở `scripts/diag/`) |
 | B0 / cross-fit đích | `baseline_b0.py`, `make_target_folds.py`; `b0.py`, `sign_labels.py`, `crossfit.py`, `target_crossfit.py` (chia đích theo fold cho `train_cls.py --crossfit`) |
 | Ca âm và fold nguồn (D60) | `prepare_ctrate_case.py` (`ctrate_geometry.py`: HU, spacing, affine CT-RATE), `fetch_ctrate_metadata.py`, `preview_ct_axes.py`, `select_negatives.py` (`negatives.py`), `make_source_folds.py` (yaml có `roles`, `SourceDRR(case_roles=...)`), `inspect_rex_case.py`; hướng dẫn chạy: `docs/RUNBOOK_P1_NEG.md` |
+| Chạy DRR theo lô (D60) | `run_rex_stream.py` (tải `download_rex.py --only` → `prepare_ctrate_case.py` → `generate_drr.py project` → kiểm cache → xóa CT; `--dry-run`; chạy lại bỏ qua ca đã có cache; ca lỗi vào `failed.txt`); test `tests/test_run_rex_stream.py` |
+| Đích NIH nhi (D62) | `eda_nih_age.py` (đếm tuổi x nhãn từ `Data_Entry_2017.csv`), `prep_nih_peds.py` (chọn < 18 tuổi, fold theo bệnh nhân, manifest, danh sách tải), `nih_shortcut_check.py` (AUROC chỉ từ tuổi/giới/tư thế, bootstrap theo bệnh nhân, tỉ lệ AP), `fetch_nih_images.py` (Kaggle CLI, tải thử hoặc toàn bộ); test `tests/test_prep_nih_peds.py` |
 | Đặc trưng đóng băng | `extract_features` → `probe_foundation` (đích Giai đoạn 0 vẫn ở `target_data.TARGET_DIRS`, cần cập nhật theo đích mới) |
 | Môi trường | `probe_env` (máy/GPU), `smoke_diffdrr` (DiffDRR chạy được không; in kết quả, không phải test tự động) |
 
