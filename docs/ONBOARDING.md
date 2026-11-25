@@ -3,7 +3,7 @@
 ## Buổi sáng: hiểu bối cảnh (≈ 2 giờ đọc)
 1. `README.md`, rồi `docs/PROTOCOL.md` (quan trọng nhất).
 2. Giai đoạn 0 (repo cũ `cxr-drr-da`, thẻ `phase0-final`): `docs/PHASE0_FREEZE.md`, rồi bài học `claude/lessons_phase0.md` trong Project.
-3. Kế hoạch Giai đoạn 1: `claude/plan_phase1_experiments.md` (Track 0–8) trong Project.
+3. Kế hoạch Giai đoạn 1: `docs/PLAN_PHASE1.md` (Track 0–9; bản đồng bộ trong Project: `claude/plan_phase1_experiments.md`).
 4. Dữ liệu: `docs/DATA_ACCESS.md`, đăng ký truy cập theo `docs/DATA_ACCESS_GUIDE.md` (VinDr-PCXR: `docs/ACCESS_VINDR_PCXR.md`); chọn dataset mình sẽ dùng và đọc data card tương ứng.
 
 ## Buổi chiều: chạy được
