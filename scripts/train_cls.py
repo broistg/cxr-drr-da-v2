@@ -55,6 +55,7 @@ def main():
                     help="evaluate with BatchNorm statistics re-estimated on the unlabeled target pool (no labels, no weight change); the plain "
                          "evaluation is kept as test_no_adabn. Checkpoint selection is unchanged.")
     ap.add_argument("--skip-if-done", action="store_true", help="exit at once if outputs/<run>/metrics.json already exists (used by run_suite.py)")
+    ap.add_argument("--only-cached", action="store_true", help="CHẠY THỬ: chỉ dùng ca đã có file cache DRR trong --drr-out (mới render một phần)")
     ap.add_argument("--max-train-cases", type=int, default=0,
                     help="learning-curve control: train on a random subset of this many CT cases (chosen by --seed); 0 = all")
     ap.add_argument("--batch-size", type=int, default=32)
@@ -106,7 +107,15 @@ def main():
     print("run:", run, "| device:", dev, "| epochs:", epochs, "| min_pct:", min_pct)
 
     # ---- dữ liệu ----
-    val_cases, train_cases = T.split_cases(a.splits, a.val_fold, a.max_train_cases, a.seed)
+    avail = None
+    if a.only_cached:
+        from drr_pipeline import dataset as D
+        avail = {p.stem for p in (a.drr_out / "cache" / a.profile / a.views[0]).glob("*.npz")}
+        print(f"--only-cached: {len(avail)} ca có cache trong {a.drr_out}")
+    val_cases, train_cases = T.split_cases(a.splits, a.val_fold, a.max_train_cases, a.seed, available=avail)
+    if a.only_cached:
+        print(f"  còn val {len(val_cases)} ca, train {len(train_cases)} ca")
+        assert val_cases and train_cases, "không đủ ca có cache ở fold val/train; đổi --val-fold hoặc render thêm"
     if a.sign:
         from drr_pipeline import signs as SG
         mk = T.sign_source_kwargs(SG.load_sign(a.sign))

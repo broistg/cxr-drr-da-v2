@@ -83,13 +83,16 @@ def subset_train_cases(train_cases: Sequence[str], roles: Dict[str, str], n_pos:
     return sorted(chosen_pos + chosen_neg[:n_pos])
 
 
-def split_cases(splits_path, val_fold: int, max_train_cases: int = 0, seed: int = 0) -> Tuple[List[str], List[str]]:
+def split_cases(splits_path, val_fold: int, max_train_cases: int = 0, seed: int = 0, available=None) -> Tuple[List[str], List[str]]:
     """(validation CT cases, training CT cases). ``max_train_cases`` > 0 lấy tập con có hạt giống: tệp có khoá ``roles`` (Phase 1) hiểu là
     số CT DƯƠNG (kèm số CT âm bằng nhau, giữ cặp nếu có ``pairs``; ``subset_train_cases``); tệp không có ``roles`` (Giai đoạn 0, E9) hiểu là
-    tổng số ca."""
+    tổng số ca. ``available`` (tập tên ca, dùng để chạy thử khi mới render một phần): bỏ ca ngoài tập này TRƯỚC khi lấy tập con."""
     folds = load_splits(splits_path)
     val_cases = cases_for(folds, [val_fold])
     train_cases = cases_for(folds, [f for f in folds if f != val_fold])
+    if available is not None:
+        val_cases = [c for c in val_cases if c in available]
+        train_cases = [c for c in train_cases if c in available]
     if max_train_cases:
         roles = load_roles(splits_path)
         if roles:

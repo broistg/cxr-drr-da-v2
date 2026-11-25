@@ -60,6 +60,7 @@ def main():
     ap.add_argument("--runs", nargs="+", default=[])
     ap.add_argument("--out-root", type=Path, default=Path("outputs/exp1"), help="thư mục chứa <run>/best.pt")
     ap.add_argument("--scores-csv", type=Path, help="điểm có sẵn (cột image, score), bỏ qua torch")
+    ap.add_argument("--only-available", action="store_true", help="CHẠY THỬ: bỏ ảnh chưa tải (không dùng cache x256; kết quả không có giá trị kết luận)")
     ap.add_argument("--max-age", type=float, default=18.0, help="tuổi < max-age (nhạy cảm: 15)")
     ap.add_argument("--n-boot", type=int, default=1000)
     ap.add_argument("--out", type=Path, default=Path("outputs/nih"))
@@ -67,6 +68,11 @@ def main():
     if not a.runs and not a.scores_csv:
         ap.error("cần --runs hoặc --scores-csv")
     rows = N.select(N.read_manifest(a.manifest), a.sign, a.max_age)
+    if a.only_available:
+        rows = [r for r in rows if (a.images / r["image"]).exists()]
+        print(f"--only-available: còn {len(rows)} ảnh có trên đĩa")
+        if not rows:
+            sys.exit("không có ảnh nào trong " + str(a.images))
     names = [r["image"] for r in rows]
     print(f"{a.sign}: {len(rows)} ảnh (dương {sum(r[a.sign] == 'positive' for r in rows)}), tuổi < {a.max_age:g}")
     out = a.out / a.sign
@@ -80,7 +86,7 @@ def main():
             sys.exit(f"thiếu điểm cho {len(miss)} ảnh (vd {miss[:3]})")
         jobs.append((a.scores_csv.stem, np.array([d[n] for n in names])))
     if a.runs:
-        x = load_cached(a.images, names, a.cache)
+        x = preprocess(a.images, names) if a.only_available else load_cached(a.images, names, a.cache)
         for run in a.runs:
             jobs.append((run, score_run(a.out_root / run, x)))
     for run, s in jobs:

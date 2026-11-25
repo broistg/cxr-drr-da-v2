@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -27,6 +28,11 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 DEFAULT_SPLITS = ROOT / "data/processed/source_splits"
+
+
+def child_env():
+    """Môi trường cho tiến trình con: ép UTF-8 (Windows mã hoá ống dẫn bằng cp1252 nên lệnh in tiếng Việt báo UnicodeEncodeError)."""
+    return {**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
 
 
 def load_sources(names, splits_dir=DEFAULT_SPLITS):
@@ -80,13 +86,16 @@ def batches(items, size):
 
 
 def run(cmd, **kw):
-    return subprocess.run([str(c) for c in cmd], cwd=ROOT, **kw)
+    if kw.get("capture_output") or kw.get("stdout") is not None:
+        kw.setdefault("encoding", "utf-8")
+        kw.setdefault("errors", "replace")
+    return subprocess.run([str(c) for c in cmd], cwd=ROOT, env=child_env(), **kw)
 
 
 def download(root, names, workers):
     chunks = [names[i::workers] for i in range(workers)]
     procs = [subprocess.Popen([sys.executable, "scripts/download_rex.py", "--root", str(root), "--stage", "download",
-                               "--only", *c], cwd=ROOT) for c in chunks if c]
+                               "--only", *c], cwd=ROOT, env=child_env()) for c in chunks if c]
     codes = [p.wait() for p in procs]
     return all(c == 0 for c in codes)
 
@@ -106,7 +115,7 @@ def prepare(root, plan, todo, names, oriented_root, workers):
     def one(item):
         name, sign = item
         r = run([sys.executable, "scripts/prepare_ctrate_case.py", "--root", root, "--volume", name, "--sign", sign,
-                 "--plan", plan, "--out", Path(oriented_root) / sign, "--overwrite"], capture_output=True, text=True)
+                 "--plan", plan, "--out", Path(oriented_root) / sign, "--overwrite"], capture_output=True)
         return item, r.returncode == 0, (r.stderr or r.stdout)[-300:]
     work = [(n, s) for n in names for s in todo[n]]
     with ThreadPoolExecutor(workers) as ex:
@@ -162,6 +171,9 @@ def cleanup(args, todo, names, bad):
 
 
 def main():
+    for st in (sys.stdout, sys.stderr):                       # in tiếng Việt khi chuyển hướng ra tệp trên Windows
+        if hasattr(st, "reconfigure"):
+            st.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--root", type=Path, required=True)
     ap.add_argument("--sources", nargs="+", required=True, help="stem yaml trong source_splits, ví dụ consolidation_Rm")

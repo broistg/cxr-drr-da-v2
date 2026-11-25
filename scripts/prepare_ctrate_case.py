@@ -29,6 +29,8 @@ def metadata_row(root: Path, name: str) -> dict:
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):  # Windows: ống dẫn mặc định cp1252, không in được tiếng Việt
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--root", type=Path, required=True)
     ap.add_argument("--volume", required=True)

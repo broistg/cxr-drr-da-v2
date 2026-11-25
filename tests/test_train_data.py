@@ -155,3 +155,12 @@ def test_subset_train_cases_by_positives_with_pairs():
     assert set(c for c in a if roles[c] == "positive") <= set(c for c in b if roles[c] == "positive")   # lồng nhau
     assert T.subset_train_cases(train, roles, 5, seed=0, pairs=pairs) == a            # tất định
     assert T.subset_train_cases(train, roles, 5, seed=1, pairs=pairs) != a
+
+
+def test_split_cases_available(tmp_path):
+    import yaml
+    p = tmp_path / "s.yaml"
+    p.write_text(yaml.safe_dump({"sign": "x", "folds": {0: ["a", "b"], 1: ["c", "d", "e"]},
+                                 "roles": {"a": "positive", "b": "negative", "c": "positive", "d": "negative", "e": "positive"}}))
+    val, tr = T.split_cases(p, 0, 1, 0, available={"a", "c", "d"})
+    assert val == ["a"] and set(tr) == {"c", "d"}                                    # chỉ ca có cache; tập con chọn trong số đó

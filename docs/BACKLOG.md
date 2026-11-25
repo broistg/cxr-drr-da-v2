@@ -13,3 +13,9 @@ Bản đồng bộ trong Project: `claude/backlog.md`.
 - Nếu được cấp, hỏi/kiểm: (1) volume hay lát rời, có spacing XY/Z và thứ tự lát; (2) HU hay giá trị chuẩn hóa; (3) tuổi, giới, tư thế chụp, ống dẫn lưu; (4) giấy phép: dùng nội bộ, công bố số liệu tổng hợp, chia sẻ lại; (5) mask khí trong khoang màng phổi hay cả khí ngoài phổi.
 - Cổng đề xuất (chưa duyệt): chỉ mở lại khi tổng CT dương có mask ≥ 60 bệnh nhân (EFA-Net 60 + ReX 10 = 70, khoảng 14 mỗi fold với 5 fold: vẫn dưới ngưỡng 20 của kế hoạch; chỉ là thí nghiệm mô tả).
 - Việc cần làm: nhắc tác giả sau 7–10 ngày không phản hồi; song song thử nhãn mức CT từ báo cáo CT-RATE (cần đọc tay; ~109 scan theo lọc từ khoá).
+
+## NIH nhi vào nhánh thích nghi miền a1/a2 (hoãn 2026-11-25)
+- Hiện NIH nhi chỉ là tập chấm (M1, null, B0 metadata; D62). Đưa vào a1 (LMMD, pool không nhãn) hoặc a2 (có nhãn đích) bị hoãn.
+- **Cổng mở lại:** M1 trên NIH nhi vượt cận trên CI của B0 metadata (tràn dịch 0,697; đông đặc 0,708), thắng null, và tầng PA > 0,5 với ≥ 30 bệnh nhân dương. Nếu không, thích nghi chỉ có nguy cơ học thêm đường tắt tư thế AP.
+- Rào cản: (1) pool/huấn luyện và tập chấm phải tách theo bệnh nhân (`nih_peds/folds.yaml`); mỗi fold chỉ 21–29 bệnh nhân dương, dưới ngưỡng 30 của quy tắc đăng ký; (2) cần bộ chuyển NIH sang manifest dạng VinDr (PNG, patient_id, fold) và chia pool/val theo bệnh nhân; (3) báo cáo PA/AP riêng; ảnh NIH có điện cực/dây/ký hiệu bên.
+- Hướng nhỏ nhất khi mở lại: a1 chỉ dùng ảnh không nhãn của các fold huấn luyện NIH nhi, chấm ở fold giữ lại. Cần đặc tả đăng ký trước.
