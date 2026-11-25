@@ -40,3 +40,20 @@ def split_for_fold(rows: Sequence[dict], fold_of: Dict[str, int], by_image, clas
         val_ids |= set(rng.choice(pool, n, replace=False).tolist()) if n else set()
     return {"eval": ev, "pool": rest, "val": [r for r in labeled if r["image_id"] in val_ids],
             "train_labeled": [r for r in labeled if r["image_id"] not in val_ids]}
+
+
+def split_all(rows: Sequence[dict], by_image, classes: Sequence[str], val_frac: float = 0.1, seed: int = 0) -> Dict[str, List[dict]]:
+    """Chấm TOÀN BỘ ảnh đích có vai trò dương/âm (``--target-fold all``), chỉ cho mô hình KHÔNG dùng nhãn hay ảnh đích (nhánh a0; M1, null).
+    ``eval`` = mọi ảnh dương/âm; ``pool`` và ``train_labeled`` rỗng. ``val`` là một phần phân tầng NẰM TRONG ``eval``, chỉ để ghi log và
+    ngưỡng phụ (độ nhạy tại độ đặc hiệu 90%): ngưỡng đó vì thế hơi lạc quan, AUROC/AP không bị ảnh hưởng. Checkpoint chọn bằng source_val."""
+    ids = [r["image_id"] for r in rows]
+    roles = SL.sign_roles(ids, by_image, classes)
+    tagged = [dict(r, role=_ROLE[ro]) for r, ro in zip(rows, roles)]
+    ev = [r for r in tagged if r["role"] in P.MAIN_ROLES]
+    rng = np.random.default_rng(seed)
+    val_ids = set()
+    for role in P.MAIN_ROLES:
+        pool = sorted(r["image_id"] for r in ev if r["role"] == role)
+        n = max(1, int(round(val_frac * len(pool)))) if pool else 0
+        val_ids |= set(rng.choice(pool, n, replace=False).tolist()) if n else set()
+    return {"eval": ev, "pool": [], "val": [r for r in ev if r["image_id"] in val_ids], "train_labeled": []}

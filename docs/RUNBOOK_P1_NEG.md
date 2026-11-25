@@ -66,7 +66,6 @@ Mảng CT/mask theo thứ tự (trục0, trục1, trục2) = (phải→trái b�
 ```
 python scripts/prepare_ctrate_case.py --root data/rex-drr --volume train_10013_a_1 --sign consolidation --plan data/rex-drr/manifests/rex_mask_plan.json
 python scripts/prepare_ctrate_case.py --root data/rex-drr --volume train_10000_a_1 --sign consolidation
-python scripts/check_orientation.py --help   # kiểm trái/phải lại bằng mask phổi nếu có
 ```
 Ghi `data/processed/oriented/<sign>/{ct,labels}/<volume>.nii.gz`: CT int16 HU cắt [-1024, 3071], affine diag(-sx,-sy,sz) từ metadata, labelmap 1 = tổn thương của dấu hiệu (rỗng cho ca âm). ReX không có mask phổi nên cấu hình dataset phải để `lung_ids: []`. Còn thiếu: mục dataset trong cấu hình trỏ `ct_dir` và `combined_dir` vào hai thư mục trên, và thử `generate_drr.py project` trên 2 ca (xem hướng DRR bằng mắt).
 
@@ -234,3 +233,19 @@ python scripts/fetch_nih_images.py --n 6                                      # 
 ```
 Kết quả đo ngày 2026-11-23: 5.241 ảnh, 1.600 bệnh nhân dưới 18 tuổi; dương (ảnh/bệnh nhân): tràn khí 314/55, tràn dịch 453/139, đông đặc 278/115; âm No Finding 3.049/1.345; 5 fold theo bệnh nhân (không bệnh nhân nào ở hai fold, kiểm 2000 bn đầu); PA 2.671, AP 2.570. AUROC chỉ từ metadata (tuổi+giới+tư thế): 0,600 / 0,659 / 0,672; AP trong ca dương 56,1% / 69,3% / 79,1% so với 39,5% ca âm.
 Tải thử 6 ảnh thành công (PNG 1024x1024, 8 bit); `fetch_nih_images.py` chuyển ảnh ra `data/raw/nih/images/` và dọn thư mục `images_00N/images` rỗng. Thư mục `images_00N` còn sót từ lần chạy trước có thể xóa tay.
+
+## Bổ sung cặp dương–âm vào yaml Rm/N đã có (2026-11-25)
+`make_source_folds.py` nay ghi khoá `pairs` ({CT dương: CT âm ghép}). Với yaml đã tạo trước đó, tính lại (tất định theo seed) và chỉ thêm khoá `pairs`; dừng nếu vai trò tính lại khác yaml hiện có. Dùng ĐÚNG các tham số đã dùng lúc tạo:
+```
+python scripts/make_source_folds.py --sign consolidation --arm Rm --mask-plan data/rex-drr/manifests/rex_mask_plan.json --negatives data/rex-drr/indexes/consolidation/negatives.csv --match-root data/rex-drr --pairs-only
+python scripts/make_source_folds.py --sign pleural_effusion --arm Rm --mask-plan data/rex-drr/manifests/rex_mask_plan.json --negatives data/rex-drr/indexes/pleural_effusion/negatives.csv --match-root data/rex-drr --pairs-only
+```
+(nhánh N: thêm `--match-sex --age-caliper 5` và `--negatives data/rex-drr/indexes/<sign>_N/negatives.csv`.)
+
+## Suite P1-T1 và P1-T3, chấm NIH nhi
+```
+python scripts/run_suite.py configs/suites/p1_t1_consolidation.yaml --dry-run     # 84 run (đích VinDr-PCXR, target-fold all)
+python scripts/run_suite.py configs/suites/p1_t3_effusion.yaml --dry-run          # 24 run
+python scripts/eval_nih.py --sign pleural_effusion --runs <tên run> --out-root outputs/p1_t3
+```
+`eval_nih.py` ghi `outputs/nih/<dấu hiệu>/<run>.md` (AUROC gộp, gộp có trọng số tư thế, riêng PA, riêng AP; CI theo bệnh nhân). Cần torch và ảnh NIH ở `data/raw/nih/images`; không có torch thì dùng `--scores-csv` (cột image, score).

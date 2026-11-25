@@ -20,4 +20,5 @@ rex = ["huggingface-hub>=1,<2"]
 where = ["src"]
 
 [tool.pytest.ini_options]
+pythonpath = ["src"]
 testpaths = ["tests"]

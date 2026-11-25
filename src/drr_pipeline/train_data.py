@@ -56,14 +56,47 @@ def sign_source_kwargs(sign_cfg: dict) -> dict:
                 min_px=max(int(lr.get("min_mask_px", 1)), 0), min_pct=0.0, eval_cell=(0, 0))
 
 
+def load_pairs(path: Path) -> Dict[str, str]:
+    """Cặp ca dương -> ca âm ghép theo metadata ({dương: âm}) nếu tệp chia fold có khoá ``pairs`` (nhánh Rm/N), nếu không {}."""
+    return dict(yaml.safe_load(Path(path).read_text(encoding="utf8")).get("pairs") or {})
+
+
+def subset_train_cases(train_cases: Sequence[str], roles: Dict[str, str], n_pos: int, seed: int = 0,
+                       pairs: Optional[Dict[str, str]] = None) -> List[str]:
+    """Tập con huấn luyện theo số CT DƯƠNG (đường cong N, P1-T1): n_pos CT dương lấy ngẫu nhiên có hạt giống (tập lồng nhau theo n_pos
+    khi cùng seed) và đúng n_pos CT âm. Ca âm ghép cặp của ca dương được giữ nếu nó nằm trong ``train_cases`` (không bao giờ lấy
+    ca ở fold validation); chỗ còn thiếu được bù ngẫu nhiên từ ca âm huấn luyện chưa dùng."""
+    pos = sorted(c for c in train_cases if roles.get(c) == "positive")
+    neg = sorted(c for c in train_cases if roles.get(c) == "negative")
+    assert 0 < n_pos <= len(pos), f"chỉ có {len(pos)} CT dương trong tập huấn luyện (yêu cầu {n_pos})"
+    assert n_pos <= len(neg), f"chỉ có {len(neg)} CT âm trong tập huấn luyện (yêu cầu {n_pos})"
+    rng = np.random.default_rng(1000 + seed)
+    order = rng.permutation(len(pos))                       # cùng seed: n nhỏ là tiền tố của n lớn
+    chosen_pos = [pos[i] for i in order[:n_pos]]
+    neg_set = set(neg)
+    chosen_neg = [pairs[c] for c in chosen_pos if pairs and pairs.get(c) in neg_set]
+    chosen_neg = list(dict.fromkeys(chosen_neg))
+    rest = [c for c in neg if c not in set(chosen_neg)]
+    need = n_pos - len(chosen_neg)
+    if need > 0:
+        chosen_neg += [rest[i] for i in rng.permutation(len(rest))[:need]]
+    return sorted(chosen_pos + chosen_neg[:n_pos])
+
+
 def split_cases(splits_path, val_fold: int, max_train_cases: int = 0, seed: int = 0) -> Tuple[List[str], List[str]]:
-    """(validation CT cases, training CT cases); max_train_cases > 0 draws a seeded subset of the training cases (E9)."""
+    """(validation CT cases, training CT cases). ``max_train_cases`` > 0 lấy tập con có hạt giống: tệp có khoá ``roles`` (Phase 1) hiểu là
+    số CT DƯƠNG (kèm số CT âm bằng nhau, giữ cặp nếu có ``pairs``; ``subset_train_cases``); tệp không có ``roles`` (Giai đoạn 0, E9) hiểu là
+    tổng số ca."""
     folds = load_splits(splits_path)
     val_cases = cases_for(folds, [val_fold])
     train_cases = cases_for(folds, [f for f in folds if f != val_fold])
     if max_train_cases:
-        assert 0 < max_train_cases <= len(train_cases), f"only {len(train_cases)} training cases"
-        train_cases = sorted(np.random.default_rng(1000 + seed).choice(train_cases, max_train_cases, replace=False).tolist())
+        roles = load_roles(splits_path)
+        if roles:
+            train_cases = subset_train_cases(train_cases, roles, max_train_cases, seed, load_pairs(splits_path))
+        else:
+            assert 0 < max_train_cases <= len(train_cases), f"only {len(train_cases)} training cases"
+            train_cases = sorted(np.random.default_rng(1000 + seed).choice(train_cases, max_train_cases, replace=False).tolist())
     return val_cases, train_cases
 
 

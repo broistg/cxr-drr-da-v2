@@ -38,7 +38,8 @@ DRR sinh từ CT người lớn có giúp phát hiện tràn dịch màng phổi
 - **Nhãn:** NIH nhãn máy rút từ báo cáo, chỉ mức ảnh; ReX 2e chưa kiểm tay (có thể lẫn tràn dịch màng ngoài tim hoặc dày màng phổi).
 - **Tuổi:** NIH nhi 73% từ 10 tuổi trở lên; không đại diện nhũ nhi (VinDr-PCXR trung vị 1 tuổi, dữ liệu bệnh viện Nhi Đồng 2 sẽ là đích nhũ nhi).
 - **Thiết bị:** điện cực, dây, chữ ký hiệu bên có trong ảnh NIH, không có trong DRR; chưa đo ảnh hưởng (Track 9).
-- **Mã còn thiếu:** (1) `train_cls.py` chạy GPU; (2) adapter nạp NIH + script đánh giá (AUROC riêng PA/AP, trọng số tư thế, bootstrap theo bệnh nhân); (3) cập nhật `configs/signs/pleural_effusion.yaml` (đích NIH; ghi chú VinDr 14+3 ảnh); (4) chạy `run_rex_stream.py` cho 154 CT dương và âm Rm; (5) tải đủ ảnh NIH nhi (`fetch_nih_images.py --all`).
+- **Đã làm trong mã (2026-11-25):** `eval_nih.py` + `nih_eval.py` (AUROC gộp, trọng số tư thế, riêng PA/AP, bootstrap theo bệnh nhân, cờ "KHÔNG KẾT LUẬN" khi tầng < 30 bệnh nhân dương); `configs/signs/pleural_effusion.yaml` có đích NIH; suite `configs/suites/p1_t3_effusion.yaml` (24 run).
+- **Còn thiếu:** (1) `train_cls.py` chạy GPU; (2) `run_rex_stream.py` cho 154 CT dương và âm Rm; (3) tải đủ ảnh NIH nhi (`fetch_nih_images.py --all`) và kiểm `eval_nih.py` đường torch; (4) `train_cls.py` vẫn nạp ảnh VinDr-PCXR để ghi log (không dùng chọn checkpoint).
 
 ## 7. Kết quả (điền sau khi chạy)
 Suite/REPORT: ___  Số run: ___  Ngày chạy: ___

@@ -80,12 +80,12 @@ def test_summary_args_default_and_flags(tmp_path):
 
 
 def test_suite_file_selects_train_script(tmp_path):
-    """a suite file with train-script must use train_seg.py without a command-line flag; --train-script still overrides."""
+    """a suite file with train-script must use that script without a command-line flag; --train-script still overrides."""
     suite = tmp_path / "s.yaml"
-    suite.write_text("name: s\ntrain-script: scripts/train_seg.py\ndefaults: {arm: drr}\nseeds: [0]\nvariants: [{name: v}]\nsummary: false\n", encoding="utf8")
+    suite.write_text("name: s\ntrain-script: scripts/train_alt.py\ndefaults: {arm: drr}\nseeds: [0]\nvariants: [{name: v}]\nsummary: false\n", encoding="utf8")
     cmd = [sys.executable, str(ROOT / "scripts" / "run_suite.py"), str(suite), "--dry-run"]
     r = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT)
-    assert r.returncode == 0 and "scripts/train_seg.py --arm drr" in r.stdout, r.stdout + r.stderr
+    assert r.returncode == 0 and "scripts/train_alt.py --arm drr" in r.stdout, r.stdout + r.stderr
     r = subprocess.run(cmd + ["--train-script", "scripts/other.py"], capture_output=True, text=True, cwd=ROOT)
     assert "scripts/other.py --arm drr" in r.stdout
-    assert S.load_suite(suite)["train-script"] == "scripts/train_seg.py"
+    assert S.load_suite(suite)["train-script"] == "scripts/train_alt.py"

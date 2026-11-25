@@ -51,7 +51,8 @@ def main():
     ap.add_argument("--out-root", type=Path, default=Path("outputs/exp1"))
     ap.add_argument("--drr-out", type=Path, default=Path("outputs/drr"))
     ap.add_argument("--drr-config", type=Path, default=ROOT / "configs/drr.yaml")
-    ap.add_argument("--splits", type=Path, default=ROOT / "configs/splits.yaml")
+    ap.add_argument("--splits", type=Path, required=True,
+                    help="tệp chia fold CT (khoá folds[, roles, pairs]), ví dụ data/processed/source_splits/<dấu hiệu>_Rm.yaml (make_source_folds.py)")
     ap.add_argument("--vindr-dir", type=Path, default=ROOT / "data/processed/vindr_pcxr")
     ap.add_argument("--annotations", type=Path, default=ROOT / "data/raw/vindr-pcxr/annotations_test.csv")
     ap.add_argument("--examples", type=int, default=6, help="example overlays per domain in the PNG")

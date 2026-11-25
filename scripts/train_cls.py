@@ -68,11 +68,13 @@ def main():
     ap.add_argument("--crossfit", type=Path, default=None,
                     help="D59: crossfit.csv (scripts/make_target_folds.py). Đích = tập gộp VinDr-PCXR: chấm fold --target-fold, thích nghi/huấn luyện trên "
                          "ảnh ngoài fold. Cần --sign (box_classes), --select source_val và --annotations-train/test.")
-    ap.add_argument("--target-fold", type=int, default=0, help="fold đích được chấm khi có --crossfit")
+    ap.add_argument("--target-fold", type=lambda v: v if v == "all" else int(v), default=0,
+                    help="fold đích được chấm khi có --crossfit; 'all' = chấm mọi ảnh đích (chỉ nhánh a0, không dùng nhãn/ảnh đích: M1, null)")
     ap.add_argument("--annotations-train", type=Path, default=ROOT / "data/raw/vindr-pcxr/annotations_train.csv")
     ap.add_argument("--annotations-test", type=Path, default=ROOT / "data/raw/vindr-pcxr/annotations_test.csv")
     ap.add_argument("--drr-config", type=Path, default=ROOT / "configs/drr.yaml")
-    ap.add_argument("--splits", type=Path, default=ROOT / "configs/splits.yaml")
+    ap.add_argument("--splits", type=Path, required=True,
+                    help="tệp chia fold CT (khoá folds[, roles, pairs]), ví dụ data/processed/source_splits/<dấu hiệu>_Rm.yaml (make_source_folds.py)")
     ap.add_argument("--drr-out", type=Path, default=Path("outputs/drr"))
     ap.add_argument("--vindr-dir", type=Path, default=ROOT / "data/processed/vindr_pcxr")
     ap.add_argument("--out-dir", type=Path, default=Path("outputs/exp1"))
@@ -126,7 +128,13 @@ def main():
         by_image = {}
         for p in (a.annotations_train, a.annotations_test):
             by_image.update(SL.classes_by_image(p))
-        cf = TC.split_for_fold(rows, TC.read_folds(a.crossfit), by_image, SG.load_sign(a.sign)["target"]["box_classes"], a.target_fold, seed=a.seed)
+        classes = SG.load_sign(a.sign)["target"]["box_classes"]
+        if a.target_fold == "all":
+            assert a.arm == "a0" and not (a.adabn or a.pixel_adapt != "none" or a.seed_labels or a.seed_supervised), \
+                "--target-fold all chỉ cho nhánh a0 không dùng ảnh/nhãn đích"
+            cf = TC.split_all(rows, by_image, classes, seed=a.seed)
+        else:
+            cf = TC.split_for_fold(rows, TC.read_folds(a.crossfit), by_image, classes, a.target_fold, seed=a.seed)
         val_rows, test_rows, tr_rows, pool_rows, test_roles = cf["val"], cf["eval"], cf["train_labeled"], cf["pool"], MAIN
         print(f"cross-fit đích fold {a.target_fold}: chấm {len(test_rows)} ảnh, pool không nhãn {len(pool_rows)}, val(log) {len(val_rows)}")
     else:

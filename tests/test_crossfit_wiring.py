@@ -73,3 +73,13 @@ def test_select_cases_chooser():
     negs = [{"volume_name": f"train_{i}_a_1.nii.gz", "patient_id": f"train_{i}"} for i in (2, 3, 4)]
     pos, neg, info = m.select_cases(plan, negs, "x", 1.0, 0, True, lambda p, c: ([c[-1]], {"ghép cặp": 1}))
     assert (pos, neg, info["ghép cặp"]) == (["train_1_a_1"], ["train_4_a_1"], 1)
+
+
+def test_split_all_scores_every_labelled_image_and_uses_no_pool():
+    rows = _rows()
+    by = {f"i{k}": ({"Consolidation"} if k % 8 == 0 else ({"Lung Opacity"} if k % 8 == 1 else {"No finding"})) for k in range(200)}
+    cf = TC.split_all(rows, by, ["Consolidation"], val_frac=0.1, seed=0)
+    assert cf["pool"] == [] and cf["train_labeled"] == []
+    assert {r["role"] for r in cf["eval"]} == set(P.MAIN_ROLES)
+    assert len(cf["eval"]) == sum(1 for k in range(200) if k % 8 != 1)                         # ảnh "other" bị loại
+    assert {r["image_id"] for r in cf["val"]} <= {r["image_id"] for r in cf["eval"]} and cf["val"]

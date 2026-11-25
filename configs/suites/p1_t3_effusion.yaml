@@ -1,0 +1,34 @@
+# P1-T3 (docs/specs/P1-T3-effusion-nih.md): M1 (arm a0, tất cả CT dương của fold huấn luyện) x 4 fold nguồn x 3 seed + null (nhãn xáo, cùng fold).
+# Không dùng nhãn/ảnh đích khi huấn luyện; train_cls.py không chấm NIH, nên đích VinDr-PCXR bỏ qua ở đây. Chấm NIH nhi sau khi huấn luyện:
+#   python scripts/eval_nih.py --sign pleural_effusion --runs <tên run> --out-root outputs/p1_t3
+# Lưu ý: train_cls.py vẫn nạp ảnh VinDr-PCXR (--vindr-dir) để ghi log target_val/test; số này KHÔNG dùng chọn checkpoint (source_val).
+name: p1_t3_effusion
+description: 'P1-T3: tràn dịch, M1 và null, đích NIH nhi'
+defaults:
+  arm: a0
+  sign: pleural_effusion
+  profile: moderate
+  views: [ap]
+  select: source_val
+  splits: data/processed/source_splits/pleural_effusion_Rm.yaml
+  drr-out: data/processed/drr/pleural_effusion
+  out-dir: outputs/p1_t3
+seeds: [0, 1, 2]
+variants:
+- name: m1_f0
+  args: {val-fold: 0}
+- name: m1_f1
+  args: {val-fold: 1}
+- name: m1_f2
+  args: {val-fold: 2}
+- name: m1_f3
+  args: {val-fold: 3}
+- name: null_f0
+  args: {val-fold: 0, shuffle-labels: true}
+- name: null_f1
+  args: {val-fold: 1, shuffle-labels: true}
+- name: null_f2
+  args: {val-fold: 2, shuffle-labels: true}
+- name: null_f3
+  args: {val-fold: 3, shuffle-labels: true}
+summary: false

@@ -138,3 +138,20 @@ def test_sign_kwargs_plain_source_and_four_categories(tmp_path):
     assert M.shape == (4, 8, 8)
     p, _, pi2, _ = weighted_from_projections(M, R, (1, 1, 1, 1), 0.0, 0.0)
     assert np.allclose(p, R.sum(0)) and np.allclose(pi2, M[2] / M.sum(0))
+
+
+def test_subset_train_cases_by_positives_with_pairs():
+    roles = {f"p{i}": "positive" for i in range(20)} | {f"n{i}": "negative" for i in range(25)}
+    train = list(roles)
+    pairs = {f"p{i}": f"n{i}" for i in range(20)} | {"p3": "n_val_only"}      # n_val_only không nằm trong train
+    a = T.subset_train_cases(train, roles, 5, seed=0, pairs=pairs)
+    assert sum(roles[c] == "positive" for c in a) == 5 and sum(roles[c] == "negative" for c in a) == 5
+    pos = [c for c in a if roles[c] == "positive"]
+    for c in pos:
+        if c != "p3":
+            assert pairs[c] in a                                                     # ca âm ghép cặp được giữ
+    assert "n_val_only" not in a
+    b = T.subset_train_cases(train, roles, 10, seed=0, pairs=pairs)
+    assert set(c for c in a if roles[c] == "positive") <= set(c for c in b if roles[c] == "positive")   # lồng nhau
+    assert T.subset_train_cases(train, roles, 5, seed=0, pairs=pairs) == a            # tất định
+    assert T.subset_train_cases(train, roles, 5, seed=1, pairs=pairs) != a

@@ -28,15 +28,15 @@ Với từng dấu hiệu s ∈ {đông đặc, tràn dịch} (tràn khí, tim t
 | Track | Nội dung | Trạng thái | Đặc tả |
 |---|---|---|---|
 | 0 | Hạ tầng: tải, chuẩn hóa, ca âm, DRR, EDA NIH | Phần lớn xong; còn chạy thử 8 ca và toàn bộ Rm, xin VinDr-CXR/PadChest, nhóm và thầy duyệt | P1-NEG (có) |
-| 1 | Đông đặc: đường cong N = 10…tất cả; đích VinDr-PCXR và NIH nhi | Nháp đặc tả | `docs/specs/P1-T1-consolidation-ncurve.md` |
+| 1 | Đông đặc: đường cong N = 10…tất cả; đích VinDr-PCXR và NIH nhi | Nháp đặc tả; suite `configs/suites/p1_t1_consolidation.yaml` (84 run) sẵn, chưa chạy | `docs/specs/P1-T1-consolidation-ncurve.md` |
 | 2 | Tràn khí | Hoãn (backlog); chờ EFA-Net hoặc nhãn mức CT | chưa |
-| 3 | Tràn dịch, đích NIH nhi | Nháp đặc tả | `docs/specs/P1-T3-effusion-nih.md` |
+| 3 | Tràn dịch, đích NIH nhi | Nháp đặc tả; suite `configs/suites/p1_t3_effusion.yaml` (24 run) sẵn, chưa chạy | `docs/specs/P1-T3-effusion-nih.md` |
 | 4 | Tim to (đo hình học, CTR) | Backlog | chưa |
 | 5 | Định vị (U-Net, mask ReX) | Chưa; còn mở chỉ số và tách mô hình | chưa |
 | 6 | Trần và khoảng cách tuổi (NIH người lớn so với nhi, tầng PA/AP) | Thiết kế, chưa đặc tả | chưa |
 | 7 | DRR trẻ em bình thường (Pediatric-CT-SEG) | Rủi ro cao | chưa |
 | 8 | Dấu hiệu đường thở | Thăm dò, kỳ vọng thấp | chưa |
-| 9 | Kiểm soát đường tắt trên NIH (PA/AP, thiết bị, DRR-vs-DRR) | Mới; cần script đánh giá | chưa |
+| 9 | Kiểm soát đường tắt trên NIH (PA/AP, thiết bị, DRR-vs-DRR) | Mới; `eval_nih.py` đã có (AUROC PA/AP, trọng số tư thế); còn kiểm thiết bị/DRR-vs-DRR | chưa |
 | B0 | B0 theo dấu hiệu trên VinDr-PCXR | Đã chạy | P1-B0 (có) |
 
 Ghi chú theo track:

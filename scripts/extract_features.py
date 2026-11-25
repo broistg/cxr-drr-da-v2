@@ -153,7 +153,8 @@ def main():
     ap.add_argument("--views", nargs="+", default=["ap"])
     ap.add_argument("--batch-size", type=int, default=16)
     ap.add_argument("--drr-config", type=Path, default=ROOT / "configs/drr.yaml")
-    ap.add_argument("--splits", type=Path, default=ROOT / "configs/splits.yaml")
+    ap.add_argument("--splits", type=Path, required=True,
+                    help="tệp chia fold CT (khoá folds[, roles, pairs]), ví dụ data/processed/source_splits/<dấu hiệu>_Rm.yaml (make_source_folds.py)")
     ap.add_argument("--drr-out", type=Path, default=Path("outputs/drr"))
     ap.add_argument("--out-dir", type=Path, default=Path("outputs/e15/features"))
     ap.add_argument("--force", action="store_true")

@@ -68,15 +68,19 @@ def main(argv=None):
     ap.add_argument("--match-root", type=Path, default=None, help="thư mục gốc dữ liệu (data/rex-drr): chọn ca âm GHÉP CẶP với ca dương theo tuổi, spacing, hãng máy từ metadata CT-RATE (neg-ratio phải là 1)")
     ap.add_argument("--age-caliper", type=float, default=None, help="khi ghép cặp: chênh lệch tuổi tối đa (năm); ca dương không ghép được sẽ không có ca âm")
     ap.add_argument("--match-sex", action="store_true", help="khi ghép cặp: thêm giới vào khoảng cách (nhánh Rm đã tạo KHÔNG dùng giới)")
+    ap.add_argument("--pairs-only", action="store_true",
+                    help="yaml đã có (tạo trước khi có khoá pairs): tính lại ghép cặp (tất định theo seed) và CHỈ thêm khoá pairs; "
+                         "dừng nếu vai trò/ca không khớp yaml hiện có. Cần --match-root.")
     ap.add_argument("--out", type=Path, default=None)
     a = ap.parse_args(argv)
     out = a.out or ROOT / f"data/processed/source_splits/{a.sign}_{a.arm}.yaml"
-    if out.exists():
+    if out.exists() and not a.pairs_only:
         sys.exit(f"{out} đã có; không ghi đè (chia lại sau khi thấy kết quả là phá giao thức). Xoá thủ công nếu chắc chắn.")
     plan = json.loads(a.mask_plan.read_text(encoding="utf8"))
     with open(a.negatives, encoding="utf8", newline="") as f:
         rows = [r for r in csv.DictReader(f) if not a.tiers or r.get("tier") in a.tiers]
     chooser = None
+    pairs: dict = {}
     if a.match_root:
         if a.neg_ratio != 1.0:
             sys.exit("ghép cặp chỉ hỗ trợ neg-ratio = 1")
@@ -85,22 +89,38 @@ def main(argv=None):
         mrows, _ = NM.read_csvs(a.match_root / "raw/ct-rate/dataset/metadata")
         meta = {case_of(r["VolumeName"]): r for r in mrows}
 
+
         def chooser(pos_c, cand_c):
             pm = {c: meta[c] for c in pos_c if c in meta}
             cm = {c: meta[c] for c in cand_c if c in meta}
             if len(pm) < len(pos_c):
                 sys.exit(f"thiếu metadata cho {len(pos_c) - len(pm)} ca dương")
             m, unmatched = CB.match_negatives(pm, cm, a.seed, a.age_caliper, a.match_sex)
+            pairs.update(m)
             return list(m.values()), {"ghép cặp": len(m), "dương không ghép được": len(unmatched), "ứng viên có metadata": len(cm)}
     pos, neg, info = select_cases(plan, rows, a.sign, a.neg_ratio, a.seed, not a.keep_other_signs, chooser)
     if not pos or not neg:
         sys.exit(f"thiếu ca: {len(pos)} dương, {len(neg)} âm")
+    if a.pairs_only:
+        if not (a.match_root and out.exists()):
+            sys.exit("--pairs-only cần --match-root và yaml đã có")
+        old = yaml.safe_load(out.read_text(encoding="utf8"))
+        if old.get("pairs"):
+            sys.exit(f"{out} đã có khoá pairs")
+        now = {**{c: "positive" for c in pos}, **{c: "negative" for c in neg}}
+        if now != old["roles"]:
+            sys.exit("vai trò tính lại KHÁC yaml hiện có (đổi dữ liệu/tham số/seed?): không ghi pairs; chạy lại với đúng các tham số đã dùng")
+        old["pairs"] = dict(sorted(pairs.items()))
+        out.write_text(yaml.safe_dump(old, allow_unicode=True, sort_keys=False), encoding="utf8")
+        print(f"thêm {len(pairs)} cặp dương-âm vào {out}")
+        return
     fp, fn = make_folds(pos, a.k, a.seed, patient_of), make_folds(neg, a.k, a.seed, patient_of)
     folds = {i: sorted(fp[i] + fn[i]) for i in range(a.k)}
     roles = {**{c: "positive" for c in pos}, **{c: "negative" for c in neg}}
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(yaml.safe_dump({"seed_note": f"make_source_folds sign={a.sign} arm={a.arm} seed={a.seed} neg_ratio={a.neg_ratio}; không chia lại",
-                                   "sign": a.sign, "arm": a.arm, "folds": folds, "roles": roles}, allow_unicode=True, sort_keys=False), encoding="utf8")
+                                   "sign": a.sign, "arm": a.arm, "folds": folds, "roles": roles,
+                                   **({"pairs": dict(sorted(pairs.items()))} if pairs else {})}, allow_unicode=True, sort_keys=False), encoding="utf8")
     chosen = set(neg)
     sel = [r for r in rows if case_of(r["volume_name"]) in chosen]
     for r in sel:

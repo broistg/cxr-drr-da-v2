@@ -26,8 +26,8 @@ CT (CT-RATE) + mask (ReXGroundingCT / mask giả)
 | `signs/` | sổ đăng ký dấu hiệu: nguồn, đích, nhãn, chỉ số | mới (`configs/signs/*.yaml`) |
 | `train/` | mô hình, vòng lặp, tăng cường, chọn checkpoint `source_val` | tách từ `scripts/train_cls.py` |
 | `adapt/` | FDA, khớp histogram, AdaBN, LMMD, mờ/nhiễu | `pixel_adapt.py`, `lmmd.py` |
-| `eval/` | chỉ số, bootstrap, null, B0, bảng so sánh, CI cho slide | `metrics.py`, `analyze_confounds.py`, `label_sensitivity.py`, `overlap.py`, `method_table.py`, `slide_numbers.py` |
-| `seg/` | phân đoạn/định vị | `seg_*`, `localization.py`, `train_seg.py` |
+| `eval/` | chỉ số, bootstrap, null, B0, bảng so sánh, CI cho slide | `metrics.py`, `nih_eval.py`, `overlap.py`, `method_table.py`, `slide_numbers.py`, `scripts/diag/` (confounds, label_sensitivity) |
+| `seg/` | phân đoạn/định vị (Track 5) | `localization.py`; mô-đun phân vùng Phase 0 (`seg_*`, `train_seg.py`, `prior.py`) đã lưu trữ ở `archive/phase0/` |
 | `foundation/` | trích đặc trưng, probe tuyến tính, zero-shot | `probe.py`, `extract_features.py`, `probe_foundation.py` |
 | `suite/` | đọc YAML, mở rộng thành lệnh, chạy | `suite.py`, `run_suite.py` |
 

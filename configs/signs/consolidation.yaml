@@ -3,8 +3,8 @@ name: consolidation
 status: draft                  # draft | approved (bác sĩ/thầy duyệt)
 description: "Đông đặc phổi: dương = có vùng đông đặc; âm = không có dấu hiệu bệnh nào (No finding)."
 source:                        # CT -> DRR
-  ct: ctrate                   # tên mục trong configs/data.yaml (chưa điền)
-  mask: rex                    # ReXGroundingCT nhóm 2b (đông đặc/xẹp phổi); 924 CT (train+val, xem docs/DATA_ACCESS.md)
+  ct: ctrate                   # CT-RATE; DRR từ data/processed/oriented/consolidation (configs/data.yaml: rex_consolidation)
+  mask: rex                    # ReXGroundingCT nhóm 2b (đông đặc/xẹp phổi); 522 CT dương trong kế hoạch tải (train 514, val 4, test 4); âm nhánh Rm (P1-NEG)
   mask_categories: ["2b"]
   one_volume_per_scan: true
   split_by: patient            # giữ tiền tố train_/valid_ (ctrate.parse_volume_name)
@@ -13,6 +13,8 @@ target:
   box_classes: ["Consolidation"]      # lớp hộp VinDr-PCXR dùng cho B0/nhãn dương (bản nhập tay: chờ duyệt)
   positive: "hộp Consolidation (211 ảnh trong EDA) - định nghĩa chính xác chờ duyệt"
   negative: "No finding (đã kiểm: 0 hộp, 0 nhãn bệnh khác)"
+extra_targets:                 # đích phụ (D62, P1-T1): báo cáo riêng, không gộp với đích chính
+  - {dataset: nih_peds, label: "Consolidation", max_age: 18, positive: "nhãn Consolidation (278 ảnh/115 bệnh nhân)", negative: "No Finding", evaluate: "scripts/eval_nih.py --sign consolidation"}
 drr:
   kind: plain                  # plain = trọng số bằng nhau (giao thức chính, D57); weighted = DRR4Covid (chỉ ablation)
   weights: [1.0, 1.0, 1.0]     # (w0, w1, w2): nền, phổi, tổn thương

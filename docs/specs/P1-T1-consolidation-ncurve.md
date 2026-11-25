@@ -41,7 +41,8 @@ Thêm CT nguồn đa dạng (ReX nhóm 2b) có làm tăng AUROC phát hiện đ�
 - **Nhãn ReX 2b** gộp đông đặc/xẹp, chưa lọc theo thể con.
 - **Đích VinDr:** hộp một bác sĩ; fold theo ảnh (chưa có `patient_id`) có thể rò rỉ giữa fold.
 - **NIH:** nhãn máy rút từ báo cáo; AP chiếm 79,1% ca dương so với 39,5% ca âm; điện cực, dây, chữ ký hiệu bên.
-- **Mã còn thiếu trước khi chạy:** (1) `train_cls.py` chưa chạy trên GPU thật; (2) nạp đích NIH (chưa có adapter PNG + manifest theo `prep_vindr`) và script đánh giá NIH (AUROC riêng PA/AP, trọng số tư thế, bootstrap theo bệnh nhân); (3) lưu cặp Rm trong yaml nếu muốn giữ ghép khi lấy tập con; (4) suite YAML cho lưới N × seed × fold (`run_suite.py`); (5) chạy `run_rex_stream.py` cho 522 CT dương và ca âm Rm.
+- **Đã làm trong mã (2026-11-25):** `--max-train-cases` với yaml có `roles` là số CT DƯƠNG, kèm số CT âm bằng nhau, giữ cặp Rm nếu yaml có `pairs` và không bao giờ lấy ca ở fold validation (`train_data.subset_train_cases`; tập lồng nhau theo N khi cùng seed); `make_source_folds.py` ghi `pairs` (yaml Rm cũ: `--pairs-only`, xem RUNBOOK); `train_cls.py --target-fold all` chấm mọi ảnh đích cho M1/null (ngưỡng độ nhạy tại độ đặc hiệu 90% chọn trên một phần của chính tập chấm nên hơi lạc quan; AUROC/AP không bị ảnh hưởng); `eval_nih.py` + `nih_eval.py` cho NIH nhi; suite `configs/suites/p1_t1_consolidation.yaml` (84 run).
+- **Còn thiếu trước khi chạy:** (1) `train_cls.py` chưa chạy trên GPU thật; (2) `run_rex_stream.py` cho 522 CT dương và ca âm Rm; (3) kiểm `eval_nih.py` đường torch trên ảnh NIH thật (mới thử `--scores-csv` với dữ liệu giả); (4) QC mắt ≥ 20 ca DRR.
 
 ## 7. Kết quả (điền sau khi chạy)
 Suite/REPORT: ___  Số run: ___  Ngày chạy: ___

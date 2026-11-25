@@ -1,0 +1,76 @@
+# P1-T1 (docs/specs/P1-T1-consolidation-ncurve.md): M1 (arm a0) theo N CT dương x 4 fold nguồn x 3 seed + null (nhãn xáo) ở N = 10, 200.
+# max-train-cases = số CT DƯƠNG (kèm số CT âm bằng nhau; yaml có roles). 'all' = không giới hạn. Đích: VinDr-PCXR, mọi ảnh (target-fold all).
+# Chạy: python scripts/run_suite.py configs/suites/p1_t1_consolidation.yaml --dry-run   (rồi bỏ --dry-run). 84 run; thời gian mỗi run chưa đo.
+# Đích NIH nhi: python scripts/eval_nih.py --sign consolidation --runs <tên run> (không cần crossfit).
+name: p1_t1_consolidation
+description: 'P1-T1: đường cong N, đông đặc, nguồn ReX/CT-RATE (âm Rm)'
+defaults:
+  arm: a0
+  sign: consolidation
+  profile: moderate
+  views: [ap]
+  select: source_val
+  splits: data/processed/source_splits/consolidation_Rm.yaml
+  drr-out: data/processed/drr/consolidation
+  crossfit: data/processed/vindr_pcxr/crossfit.csv
+  target-fold: all
+  out-dir: outputs/p1_t1
+seeds: [0, 1, 2]
+variants:
+- name: n10_f0
+  args: {val-fold: 0, max-train-cases: 10}
+- name: n10_f1
+  args: {val-fold: 1, max-train-cases: 10}
+- name: n10_f2
+  args: {val-fold: 2, max-train-cases: 10}
+- name: n10_f3
+  args: {val-fold: 3, max-train-cases: 10}
+- name: n30_f0
+  args: {val-fold: 0, max-train-cases: 30}
+- name: n30_f1
+  args: {val-fold: 1, max-train-cases: 30}
+- name: n30_f2
+  args: {val-fold: 2, max-train-cases: 30}
+- name: n30_f3
+  args: {val-fold: 3, max-train-cases: 30}
+- name: n100_f0
+  args: {val-fold: 0, max-train-cases: 100}
+- name: n100_f1
+  args: {val-fold: 1, max-train-cases: 100}
+- name: n100_f2
+  args: {val-fold: 2, max-train-cases: 100}
+- name: n100_f3
+  args: {val-fold: 3, max-train-cases: 100}
+- name: n200_f0
+  args: {val-fold: 0, max-train-cases: 200}
+- name: n200_f1
+  args: {val-fold: 1, max-train-cases: 200}
+- name: n200_f2
+  args: {val-fold: 2, max-train-cases: 200}
+- name: n200_f3
+  args: {val-fold: 3, max-train-cases: 200}
+- name: nall_f0
+  args: {val-fold: 0}
+- name: nall_f1
+  args: {val-fold: 1}
+- name: nall_f2
+  args: {val-fold: 2}
+- name: nall_f3
+  args: {val-fold: 3}
+- name: null_n10_f0
+  args: {val-fold: 0, max-train-cases: 10, shuffle-labels: true}
+- name: null_n10_f1
+  args: {val-fold: 1, max-train-cases: 10, shuffle-labels: true}
+- name: null_n10_f2
+  args: {val-fold: 2, max-train-cases: 10, shuffle-labels: true}
+- name: null_n10_f3
+  args: {val-fold: 3, max-train-cases: 10, shuffle-labels: true}
+- name: null_n200_f0
+  args: {val-fold: 0, max-train-cases: 200, shuffle-labels: true}
+- name: null_n200_f1
+  args: {val-fold: 1, max-train-cases: 200, shuffle-labels: true}
+- name: null_n200_f2
+  args: {val-fold: 2, max-train-cases: 200, shuffle-labels: true}
+- name: null_n200_f3
+  args: {val-fold: 3, max-train-cases: 200, shuffle-labels: true}
+summary: false
