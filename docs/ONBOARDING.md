@@ -7,7 +7,7 @@
 4. Dữ liệu: `docs/DATA_ACCESS.md`, đăng ký truy cập theo `docs/DATA_ACCESS_GUIDE.md` (VinDr-PCXR: `docs/ACCESS_VINDR_PCXR.md`); chọn dataset mình sẽ dùng và đọc data card tương ứng.
 
 ## Buổi chiều: chạy được
-1. Thiết lập môi trường (README, "Thiết lập nhanh"); `pytest -q` phải qua.
+1. Thiết lập môi trường (README, "Thiết lập nhanh"; máy mới thì `docs/SETUP_FROM_SCRATCH.md`); `pytest -q` phải qua.
 2. `python scripts/probe_env.py` và dán kết quả vào `docs/COMPUTE.md` nếu là máy mới.
 3. Nhận một việc nhỏ (xem dưới), mở nhánh `feat/...`, làm theo `CONTRIBUTING.md`, mở PR.
 

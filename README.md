@@ -20,6 +20,7 @@ Với từng dấu hiệu (đông đặc, tràn dịch, tim to, tràn khí): ả
 8. `docs/DECISIONS.md`: nhật ký quyết định (tiếp nối D53 của repo cũ).
 
 ## Thiết lập nhanh
+Máy mới, chưa có dữ liệu/fold: làm theo `docs/SETUP_FROM_SCRATCH.md` (toàn bộ các bước từ clone đến chạy suite).
 ```
 python -m venv .venv
 # Linux/macOS: source .venv/bin/activate     Windows: .venv\Scripts\Activate.ps1

@@ -1,0 +1,51 @@
+# P1-NEG (docs/specs/P1-NEG-negative-source-ablation.md): nguồn ca âm Rm (ghép cặp ReX) so với N (CT-RATE bình thường chặt), consolidation.
+# Cùng CT dương, cùng fold, cùng siêu tham số; chỉ khác yaml (ca âm). Mỗi nhánh có out-dir riêng vì tên run KHÔNG chứa tên yaml chia fold
+# (nếu chung out-dir, run Rm và N sẽ trùng tên và bị bỏ qua nhầm). M1 dùng toàn bộ CT dương của fold huấn luyện; null = nhãn xáo, cùng fold.
+# CHỈ CHẠY SAU KHI: (1) T1/T3 cho tín hiệu (cổng ở spec P1-NEG mục 7), (2) đã chạy mục 'Thêm nhánh N' trong docs/RUNBOOK_P1_NEG.md
+# (chọn ca N, make_source_folds --arm N, run_rex_stream --sources <dấu hiệu>_N), (3) verify_splits.py OK. 48 run; thời gian mỗi run chưa đo.
+# Kiểm: python scripts/run_suite.py configs/suites/p1_neg_consolidation.yaml --dry-run
+name: p1_neg_consolidation
+description: 'P1-NEG: consolidation, ca âm Rm so với N'
+defaults:
+  arm: a0
+  sign: consolidation
+  profile: moderate
+  views: [ap]
+  select: source_val
+  drr-out: data/processed/drr/consolidation
+  crossfit: data/processed/vindr_pcxr/crossfit.csv
+  target-fold: all
+seeds: [0, 1, 2]
+variants:
+- name: rm_f0
+  args: {splits: data/processed/source_splits/consolidation_Rm.yaml, out-dir: outputs/p1_neg_consolidation/Rm, val-fold: 0}
+- name: rm_f1
+  args: {splits: data/processed/source_splits/consolidation_Rm.yaml, out-dir: outputs/p1_neg_consolidation/Rm, val-fold: 1}
+- name: rm_f2
+  args: {splits: data/processed/source_splits/consolidation_Rm.yaml, out-dir: outputs/p1_neg_consolidation/Rm, val-fold: 2}
+- name: rm_f3
+  args: {splits: data/processed/source_splits/consolidation_Rm.yaml, out-dir: outputs/p1_neg_consolidation/Rm, val-fold: 3}
+- name: null_rm_f0
+  args: {splits: data/processed/source_splits/consolidation_Rm.yaml, out-dir: outputs/p1_neg_consolidation/Rm, val-fold: 0, shuffle-labels: true}
+- name: null_rm_f1
+  args: {splits: data/processed/source_splits/consolidation_Rm.yaml, out-dir: outputs/p1_neg_consolidation/Rm, val-fold: 1, shuffle-labels: true}
+- name: null_rm_f2
+  args: {splits: data/processed/source_splits/consolidation_Rm.yaml, out-dir: outputs/p1_neg_consolidation/Rm, val-fold: 2, shuffle-labels: true}
+- name: null_rm_f3
+  args: {splits: data/processed/source_splits/consolidation_Rm.yaml, out-dir: outputs/p1_neg_consolidation/Rm, val-fold: 3, shuffle-labels: true}
+- name: n_f0
+  args: {splits: data/processed/source_splits/consolidation_N.yaml, out-dir: outputs/p1_neg_consolidation/N, val-fold: 0}
+- name: n_f1
+  args: {splits: data/processed/source_splits/consolidation_N.yaml, out-dir: outputs/p1_neg_consolidation/N, val-fold: 1}
+- name: n_f2
+  args: {splits: data/processed/source_splits/consolidation_N.yaml, out-dir: outputs/p1_neg_consolidation/N, val-fold: 2}
+- name: n_f3
+  args: {splits: data/processed/source_splits/consolidation_N.yaml, out-dir: outputs/p1_neg_consolidation/N, val-fold: 3}
+- name: null_n_f0
+  args: {splits: data/processed/source_splits/consolidation_N.yaml, out-dir: outputs/p1_neg_consolidation/N, val-fold: 0, shuffle-labels: true}
+- name: null_n_f1
+  args: {splits: data/processed/source_splits/consolidation_N.yaml, out-dir: outputs/p1_neg_consolidation/N, val-fold: 1, shuffle-labels: true}
+- name: null_n_f2
+  args: {splits: data/processed/source_splits/consolidation_N.yaml, out-dir: outputs/p1_neg_consolidation/N, val-fold: 2, shuffle-labels: true}
+- name: null_n_f3
+  args: {splits: data/processed/source_splits/consolidation_N.yaml, out-dir: outputs/p1_neg_consolidation/N, val-fold: 3, shuffle-labels: true}

@@ -37,6 +37,7 @@ Với từng dấu hiệu s ∈ {đông đặc, tràn dịch} (tràn khí, tim t
 | 7 | DRR trẻ em bình thường (Pediatric-CT-SEG) | Rủi ro cao | chưa |
 | 8 | Dấu hiệu đường thở | Thăm dò, kỳ vọng thấp | chưa |
 | 9 | Kiểm soát đường tắt trên NIH (PA/AP, thiết bị, DRR-vs-DRR) | Mới; `eval_nih.py` đã có (AUROC PA/AP, trọng số tư thế); còn kiểm thiết bị/DRR-vs-DRR | chưa |
+| 10 | Nhánh N so với Rm (P1-NEG) | Spec đã sửa 2026-11-28; suite có; chờ cổng T1/T3 | `docs/specs/P1-NEG-negative-source-ablation.md` |
 | B0 | B0 theo dấu hiệu trên VinDr-PCXR | Đã chạy | P1-B0 (có) |
 
 Ghi chú theo track:

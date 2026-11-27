@@ -249,3 +249,30 @@ python scripts/run_suite.py configs/suites/p1_t3_effusion.yaml --dry-run        
 python scripts/eval_nih.py --sign pleural_effusion --runs <tên run> --out-root outputs/p1_t3
 ```
 `eval_nih.py` ghi `outputs/nih/<dấu hiệu>/<run>.md` (AUROC gộp, gộp có trọng số tư thế, riêng PA, riêng AP; CI theo bệnh nhân). Cần torch và ảnh NIH ở `data/raw/nih/images`; không có torch thì dùng `--scores-csv` (cột image, score).
+
+## Thêm nhánh N (P1-NEG: Rm so với N); chỉ chạy khi qua cổng ở spec P1-NEG mục 10
+Chỉ CT âm của N không trùng với Rm là mới (cache DRR của ca đã render không bị làm lại; cache không phụ thuộc fold hay nhánh). Mọi lệnh chạy ở gốc repo; `--root data/rex-drr`.
+```
+# 1. Metadata (nếu chưa có) và chọn ca N, lần lượt cho consolidation và pleural_effusion (spec mục 7: định nghĩa, ghép cặp có giới)
+python scripts/fetch_ctrate_metadata.py --root data/rex-drr --labels
+python scripts/fetch_ctrate_metadata.py --root data/rex-drr --reports
+python scripts/select_ctrate_normals.py --root data/rex-drr --sign consolidation
+python scripts/select_ctrate_normals.py --root data/rex-drr --sign pleural_effusion
+python scripts/make_source_folds.py --sign consolidation --arm N --mask-plan data/rex-drr/manifests/rex_mask_plan.json --negatives data/rex-drr/indexes/consolidation_N/negatives.csv --match-root data/rex-drr --match-sex --age-caliper 5
+python scripts/make_source_folds.py --sign pleural_effusion --arm N --mask-plan data/rex-drr/manifests/rex_mask_plan.json --negatives data/rex-drr/indexes/pleural_effusion_N/negatives.csv --match-root data/rex-drr --match-sex --age-caliper 5
+python scripts/cohort_balance.py --root data/rex-drr --splits data/processed/source_splits/consolidation_N.yaml       # |SMD| < 0,1, AUROC < 0,55
+python scripts/cohort_balance.py --root data/rex-drr --splits data/processed/source_splits/pleural_effusion_N.yaml
+# 2. Kế hoạch tải gồm cả ca âm Rm và N (tạo lại rex_download_plan.json), rồi xem số volume mới
+python scripts/download_rex.py --root data/rex-drr --stage plan --signs consolidation pleural_effusion --extra-ct-list data/processed/source_splits/consolidation_Rm_negatives.csv data/processed/source_splits/pleural_effusion_Rm_negatives.csv data/processed/source_splits/consolidation_N_negatives.csv data/processed/source_splits/pleural_effusion_N_negatives.csv
+python scripts/run_rex_stream.py --root data/rex-drr --sources consolidation_N pleural_effusion_N --dry-run
+# 3. Tải và sinh DRR chỉ cho ca chưa có cache
+python scripts/run_rex_stream.py --root data/rex-drr --sources consolidation_N pleural_effusion_N
+# 4. Ghi mã băm yaml N mới (không ghi đè mục cũ), commit configs/split_checksums.json
+python scripts/verify_splits.py --write
+# 5. Chạy suite và chấm NIH cho tràn dịch
+python scripts/run_suite.py configs/suites/p1_neg_consolidation.yaml --dry-run
+python scripts/run_suite.py configs/suites/p1_neg_consolidation.yaml
+python scripts/run_suite.py configs/suites/p1_neg_effusion.yaml
+python scripts/eval_nih.py --sign pleural_effusion --runs <tên run> --out-root outputs/p1_neg_effusion/N     # và /Rm
+```
+Dừng nếu: số CT N đủ tiêu chí ít hơn 2 lần số CT dương, dung lượng vượt chỗ trống trừ 20%, hoặc `cohort_balance` không đạt (spec mục 5, 7). Không nới ngưỡng.

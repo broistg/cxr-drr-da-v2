@@ -1,12 +1,12 @@
 # Đặc tả thí nghiệm: P1-NEG, nguồn ca âm (ReX so với CT-RATE bình thường chặt)
 
-Ngày viết: 2026-11-22  Người viết: Claude (bản nháp theo yêu cầu của Tiến Đạt)  Người duyệt: ___  Trạng thái: **nháp, chưa duyệt, chưa chạy**
+Ngày viết: 2026-11-22  Người viết: Claude (bản nháp theo yêu cầu của Tiến Đạt)  Người duyệt: ___  Trạng thái: **nháp, chưa duyệt, chưa chạy**; so sánh chính đổi từ R sang Rm (xem mục 10, 2026-11-28)
 Quy tắc chung: `docs/PROTOCOL.md`; đích và cross-fit: D59; nguồn âm: D60; B0: `docs/specs/P1-B0-vindr-pcxr-signs.md`.
 
 ## 1. Câu hỏi
 Mô hình học từ DRR có chuyển giao sang X-quang thật tốt hơn khi ca âm huấn luyện là **CT-RATE bình thường chặt** (khớp đích "No finding") hay là **CT ReX không có dấu hiệu s** (CT bất thường, "âm khó")?
 - H0: không khác biệt đo được (|Δ| < 0,03 hoặc CI ghép cặp chứa 0).
-- H1: bình thường chặt hơn (Δ(N − R) ≥ +0,03). H1': ca âm ReX hơn (Δ ≤ −0,03).
+- H1: bình thường chặt hơn (Δ(N − Rm) ≥ +0,03). H1': ca âm ReX hơn (Δ ≤ −0,03).
 Động lực không phải nhiễu nhãn: audit (`negatives_audit.md`, 2026-11-22) cho `share_mention` thấp (≤ 8,6%) và tỉ lệ dương ở train ngang val/test. Động lực là lệch phân phối: âm đích là ảnh bình thường, âm ReX là CT bất thường (mọi CT của ReX có ít nhất một finding).
 
 ## 2. Dữ liệu
@@ -21,20 +21,20 @@ Mô hình học từ DRR có chuyển giao sang X-quang thật tốt hơn khi ca
 
 ## 3. Cấu hình
 - Cùng đường ống DRR (plain, D57), cùng tư thế (profile `moderate` hoặc theo `pose_profiles`), cùng `resample_mm`, cùng kiến trúc/siêu tham số/số epoch. Chỉ khác danh sách CT âm.
-- Các nhánh: R, N; null xáo nhãn cho mỗi nhánh (≥ 12 run: 4 fold × 3 seed); B0 cross-fit (đích); phụ, không đăng ký kết luận: R chỉ `negative_confirmed` (âm sạch nhất); hỗn hợp 50% R + 50% N.
+- Các nhánh: Rm (thay R, mục 10), N; null xáo nhãn cho mỗi nhánh (≥ 12 run: 4 fold × 3 seed); B0 cross-fit (đích); phụ, không đăng ký kết luận: R chỉ `negative_confirmed` (âm sạch nhất); hỗn hợp 50% R + 50% N.
 - Chọn checkpoint: `source_val`. Lưu ý: `source_val` của mỗi nhánh dùng ca âm của chính nhánh đó nên hai nhánh chọn epoch trên tập kiểm khác nhau; báo kèm epoch cuối ở phụ lục.
 - Chưa có mã nối `train_cls.py` với cross-fit đích (D59) và với danh sách ca âm; chưa có script chọn ca bình thường CT-RATE.
 
 ## 4. Chỉ số
 - Chính: AUROC trên tập gộp đích cho từng dấu hiệu, trung bình 4 fold × 3 seed, theo cross-fit (mỗi ảnh chấm bởi mô hình chưa thấy nó). Phụ: AP; AUROC chia theo nhóm tuổi (đích nhi).
-- Thống kê: Δ(N − R) ghép cặp theo ảnh và theo fold/seed; CI bootstrap theo ảnh (chỉ nhiễu ảnh) cộng SD giữa run; "thật − null" cùng fold, cho từng nhánh.
+- Thống kê: Δ(N − Rm) ghép cặp theo ảnh và theo fold/seed; CI bootstrap theo ảnh (chỉ nhiễu ảnh) cộng SD giữa run; "thật − null" cùng fold, cho từng nhánh.
 - **Kiểm soát đường tắt nguồn** (không cần huấn luyện mô hình ảnh): hồi quy logistic dương so với âm trong từng nhánh trên đặc trưng kỹ thuật của CT (spacing xy/z, kích thước ma trận, độ dày lát, khoảng HU, FOV nếu có), 5-fold theo bệnh nhân. AUROC gần 0,5 nghĩa là nhánh không có đường tắt kỹ thuật; ≥ 0,70 thì nhánh đó có thể tách dương âm bằng nguồn quét, phải ghi kèm kết luận.
 
 ## 5. Cách đọc kết quả (đăng ký trước)
 Điều kiện nền cho từng dấu hiệu: mô hình của nhánh X chỉ được tính là "học được tín hiệu" nếu AUROC trung bình cross-fit vượt **cận trên CI của B0 cross-fit** (consolidation: 0,688; tràn dịch: chưa đo, không đánh giá được ở đích nên chỉ báo cáo mô tả) **và** thật − null dương cùng fold.
-- **N tốt hơn** khi: cả hai nhánh đạt điều kiện nền (hoặc N đạt và R không), Δ(N − R) ≥ +0,03 ở ≥ 3/4 fold, CI ghép cặp không chứa 0, thật − null của N hơn của R (cùng fold) dương.
-- **R tốt hơn:** ngược lại với cùng ngưỡng (Δ ≤ −0,03).
-- **Không khác biệt đo được:** |Δ trung bình| < 0,03 hoặc CI chứa 0; giữ nhánh R (rẻ hơn, không cần tải thêm CT) làm nguồn âm chính.
+- **N tốt hơn** khi: cả hai nhánh đạt điều kiện nền (hoặc N đạt và R không), Δ(N − Rm) ≥ +0,03 ở ≥ 3/4 fold, CI ghép cặp không chứa 0, thật − null của N hơn của R (cùng fold) dương.
+- **Rm tốt hơn:** ngược lại với cùng ngưỡng (Δ ≤ −0,03).
+- **Không khác biệt đo được:** |Δ trung bình| < 0,03 hoặc CI chứa 0; giữ nhánh Rm (rẻ hơn, không cần tải thêm CT) làm nguồn âm chính.
 - **Không kết luận (không thông tin):** cả hai nhánh không vượt cận trên B0 cross-fit; khi đó chênh lệch giữa hai nhánh không diễn giải được, chỉ ghi như vậy.
 - **Điều kiện dừng sớm:** (a) số CT bình thường CT-RATE đủ tiêu chí ít hơn 2 lần số CT dương; (b) dung lượng tải nhánh N vượt chỗ trống ổ đĩa lab trừ 20% (937 GiB lúc đo 2026-11-19); (c) kiểm soát đường tắt nguồn của một nhánh ≥ 0,70: tạm dừng nhánh đó và báo.
 - Phân tích sau khi có số ghi "(sau khi có số, không đăng ký trước)".
@@ -63,3 +63,10 @@ Mô hình học từ DRR có chuyển giao sang X-quang thật tốt hơn khi ca
 
 ## 9. Kết luận và quyết định
 Theo mục 5; liên kết `D-xx` trong `docs/DECISIONS.md`.
+
+## 10. Cập nhật 2026-11-28: so sánh chính là Rm với N (thay cho R với N)
+Nhánh Rm (D61: âm ghép cặp theo tuổi, spacing, hãng máy) đã thành nguồn âm chính của Phase 1 (T1, T3), vì R ngẫu nhiên lệch tuổi (AUROC lối tắt 0,63 đến 0,75). Do đó mọi chỗ ở trên viết "R" trong so sánh với N đọc là **Rm**; Δ(N − Rm), "Rm tốt hơn", "giữ Rm làm nguồn chính". Nhánh R ngẫu nhiên không chạy trong thí nghiệm này (đã đo là không cân bằng; chỉ có thể thêm như phụ nếu cần). Rm và N dùng CÙNG CT dương và cùng cách ghép cặp (tuổi, spacing, hãng máy; N ghép thêm giới, caliper tuổi 5 năm), chỉ khác nguồn ca âm. Cân bằng đã đo (2026-11-22/23): N consolidation 522 dương, 521 âm, AUROC lối tắt 0,439, |SMD| ≤ 0,05; effusion 154/153, 0,410, |SMD| ≤ 0,09. Độ nhiễm bộ lọc báo cáo: 1/100 cho mỗi dấu hiệu.
+
+**Cổng chạy (đề xuất 2026-11-28, chờ nhóm duyệt):** chỉ chạy P1-NEG sau khi T1 (đông đặc) cho thấy M1 vượt cận trên CI của B0 cross-fit (0,688) và thắng null. Nếu M1 không vượt B0 thì so sánh Rm với N không diễn giải được (mục 5, "không kết luận"), và phần tải thêm CT (~240 volume) không đáng. Tràn dịch: chấm trên NIH nhi (`eval_nih.py`), cổng tương ứng là M1 vượt B0 metadata của NIH (0,697) ở T3.
+
+**Suite:** `configs/suites/p1_neg_consolidation.yaml` (đích VinDr-PCXR, cross-fit) và `configs/suites/p1_neg_effusion.yaml` (đích NIH nhi); mỗi suite 48 run = 2 nhánh × (thật + null) × 4 fold × 3 seed, M1 dùng toàn bộ CT dương. Mỗi nhánh có out-dir riêng (`outputs/p1_neg_<tên>/Rm`, `/N`) vì tên run không chứa tên yaml chia fold. Cách dựng dữ liệu cho N và lệnh chạy: `docs/RUNBOOK_P1_NEG.md`, mục "Thêm nhánh N".
