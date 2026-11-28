@@ -86,6 +86,8 @@ python scripts/run_rex_stream.py --root data/rex-drr --sources consolidation_Rm 
 - Kết quả: `data/processed/drr/<dấu hiệu>/cache/moderate/ap/<ca>.npz`. Ước tính ~3,5 giờ GPU A100 cho 1.789 ca (1 profile, 1 view), tải CT (~300 GB tổng, xoá dần sau mỗi lô) là điểm nghẽn.
 - Muốn xem ảnh: `python scripts/generate_drr.py export --dataset rex_consolidation --sign consolidation --cases <ca> --profiles moderate --views ap --out-dir outputs/drr_probe`.
 
+**Nếu nhóm đã có cache DRR trên HF** (`docs/DRR_SHARING.md`): không chạy `run_rex_stream`, thay bằng `python scripts/sync_drr_hf.py pull --repo <tổ-chức>/<tên>` rồi `... verify`. Chỉ người sinh DRR mới cần mục 5; mọi người vẫn làm các mục 2, 4, 6, 7, 8.
+
 ## 6. Đích VinDr-PCXR
 Đặt tệp đã tải từ PhysioNet vào `data/raw/vindr-pcxr/` (cần có `annotations_train.csv`, `annotations_test.csv` và DICOM).
 ```
